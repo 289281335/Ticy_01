@@ -1,0 +1,387 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+<mapper namespace="com.sunmnet.bigdata.web.dao.predict.IPredictStudentSubjectsDAO">
+    <!--
+    save
+    update
+    findOne
+    findOneByProperty
+    findOneByCondition
+    delete
+    deleteByCondition
+    deleteByProperty
+    findAll
+    queryPage
+    count
+    -->
+
+
+
+    <!--根据学号查出该生某学年的每科成绩-->
+    <select id="scorePrediction" resultType="Map" parameterType="java.lang.String">
+    SELECT DISTINCT
+      a.student_no AS studentNo,
+      a.subject AS SUBJECT,
+      a.predict_scores AS predictionScores,
+      b.credits AS credits,
+      b.semester AS semester,
+      b.average_scores AS averageScores
+    FROM
+      predict_student_subjects a
+      LEFT JOIN statis_student_scores b
+        ON a.subject = b.examination_course_name
+    WHERE a.student_no = #{studentNo}
+      AND a.predict_scores > 0
+    GROUP BY a.student_no,
+      a.subject,
+      a.predict_scores,
+      b.credits,
+      b.semester,
+      b.average_scores
+  </select>
+
+
+  <!-- 查询预测挂科数量 -->
+  <select id="failCourseCount" resultType="java.lang.Integer" parameterType="java.lang.String">
+      SELECT
+    COUNT(*)
+  FROM
+    (SELECT DISTINCT
+      t.studentNo,
+      t.subject,
+      t.predictionScores,
+      MAX(t.credits) AS credits,
+      MAX(t.semester) AS semester,
+      MAX(t.averageScores) AS averageScores
+    FROM
+      (SELECT DISTINCT
+        a.student_no AS studentNo,
+        a.subject AS SUBJECT,
+        a.predict_scores AS predictionScores,
+        b.credits AS credits,
+        b.semester AS semester,
+        b.average_scores AS averageScores
+      FROM
+        predict_student_subjects a
+        LEFT JOIN statis_student_scores b
+          ON a.subject = b.examination_course_name
+      WHERE a.student_no = #{studentNo}
+        AND a.predict_scores > 0
+      GROUP BY a.student_no,
+        a.subject,
+        a.predict_scores,
+        b.credits,
+        b.semester,
+        b.average_scores) t
+    GROUP BY t.studentNo,
+      t.subject,
+      t.averageScores) w
+  WHERE w.predictionScores BETWEEN 0
+    AND 68
+  </select>
+
+
+
+  <select id="countStudentByFailSubject"
+          resultType="Map"
+          parameterType="com.sunmnet.bigdata.web.model.entity.student.StudentInfo">
+    SELECT
+    SUM( CASE WHEN total = 0 THEN 1 ELSE 0 END ) AS count0,
+    SUM( CASE WHEN total = 1 THEN 1 ELSE 0 END ) AS count1,
+    SUM( CASE WHEN total = 2 THEN 1 ELSE 0 END ) AS count2,
+    SUM( CASE WHEN total >= 3 THEN 1 ELSE 0 END ) AS count3
+    FROM (
+      SELECT a.student_no,a.name,
+      SUM(CASE WHEN a.predict_scores > 68 THEN 0 ELSE  1 END) total FROM predict_student_subjects b
+      JOIN student_info a ON a.student_no=b.student_no
+      <trim prefix="WHERE" prefixOverrides="AND | OR">
+        AND a.STATUS = '1'
+        <if test="studentNo != null" >
+          AND a.student_no = #{studentNo}
+        </if>
+        <if test="identityNo != null" >
+          AND a.identity_no = #{identityNo}
+        </if>
+        <if test="name != null" >
+          AND a.name = #{name}
+        </if>
+        <if test="gender != null" >
+          AND a.gender = #{gender}
+        </if>
+        <if test="phone != null" >
+          AND a.phone = #{phone}
+        </if>
+        <if test="email != null" >
+          AND a.email = #{email}
+        </if>
+        <if test="nativePlace != null" >
+          AND a.native_place = #{nativePlace}
+        </if>
+        <if test="politicalLandscape != null" >
+          AND a.political_landscape = #{politicalLandscape}
+        </if>
+        <if test="examineeNo != null" >
+          AND a.examinee_no = #{examineeNo}
+        </if>
+        <if test="schoolYear != null" >
+          AND a.school_year = #{schoolYear}
+        </if>
+        <if test="graduatedSchool != null" >
+          AND a.graduated_school = #{graduatedSchool}
+        </if>
+        <if test="academyName != null" >
+          AND a.academy_name = #{academyName}
+        </if>
+        <if test="collegeName != null" >
+          AND a.college_name = #{collegeName}
+        </if>
+        <if test="collegeCode != null" >
+          AND a.college_code = #{collegeCode}
+        </if>
+        <if test="majorName != null" >
+          AND a.major_name = #{majorName}
+        </if>
+        <if test="majorCode != null" >
+          AND a.major_code = #{majorCode}
+        </if>
+        <if test="className != null" >
+          AND a.class_name = #{className}
+        </if>
+        <if test="nation != null" >
+          AND a.nation = #{nation}
+        </if>
+        <if test="birthday != null" >
+          AND a.birthday = #{birthday}
+        </if>
+      </trim>
+      GROUP BY
+      a.student_no,
+      a.name
+    ) t
+  </select>
+
+  <select id="listSubjectsScore"
+          resultType="Map"
+          parameterType="com.sunmnet.bigdata.web.model.entity.student.StudentInfo">
+    SELECT a.student_no,a.name,
+    SUM(CASE WHEN a.predict_scores > 68 THEN 0 ELSE  1 END) total FROM predict_student_subjects b
+    JOIN student_info a ON a.student_no=b.student_no
+    <trim prefix="WHERE" prefixOverrides="AND | OR">
+      AND a.STATUS = '1'
+      <if test="studentNo != null" >
+        AND a.student_no = #{studentNo}
+      </if>
+      <if test="identityNo != null" >
+        AND a.identity_no = #{identityNo}
+      </if>
+      <if test="name != null" >
+        AND a.name = #{name}
+      </if>
+      <if test="gender != null" >
+        AND a.gender = #{gender}
+      </if>
+      <if test="phone != null" >
+        AND a.phone = #{phone}
+      </if>
+      <if test="email != null" >
+        AND a.email = #{email}
+      </if>
+      <if test="nativePlace != null" >
+        AND a.native_place = #{nativePlace}
+      </if>
+      <if test="politicalLandscape != null" >
+        AND a.political_landscape = #{politicalLandscape}
+      </if>
+      <if test="examineeNo != null" >
+        AND a.examinee_no = #{examineeNo}
+      </if>
+      <if test="schoolYear != null" >
+        AND a.school_year = #{schoolYear}
+      </if>
+      <if test="graduatedSchool != null" >
+        AND a.graduated_school = #{graduatedSchool}
+      </if>
+      <if test="academyName != null" >
+        AND a.academy_name = #{academyName}
+      </if>
+      <if test="collegeName != null" >
+        AND a.college_name = #{collegeName}
+      </if>
+      <if test="collegeCode != null" >
+        AND a.college_code = #{collegeCode}
+      </if>
+      <if test="majorName != null" >
+        AND a.major_name = #{majorName}
+      </if>
+      <if test="majorCode != null" >
+        AND a.major_code = #{majorCode}
+      </if>
+      <if test="className != null" >
+        AND a.class_name = #{className}
+      </if>
+      <if test="nation != null" >
+        AND a.nation = #{nation}
+      </if>
+      <if test="birthday != null" >
+        AND a.birthday = #{birthday}
+      </if>
+    </trim>
+    GROUP BY
+    a.student_no,
+    a.name
+  </select>
+    <!--根据条件查询每个院的挂科人数-->
+    <select id="countGradeByFailSubject"
+            resultType="Integer"
+            parameterType="com.sunmnet.bigdata.web.model.request.predict.PredictFailSubjectREQ">
+        SELECT
+        SUM( CASE WHEN total = 0 THEN 1 ELSE 0 END ) AS count0,
+        SUM( CASE WHEN total = 1 THEN 1 ELSE 0 END ) AS count1,
+        SUM( CASE WHEN total = 2 THEN 1 ELSE 0 END ) AS count2,
+        SUM( CASE WHEN total >= 3 THEN 1 ELSE 0 END ) AS count3
+        FROM (
+        SELECT a.student_no,a.name,
+        SUM(CASE WHEN b.predict_scores > 68 THEN 0 ELSE 1 END) total FROM predict_student_subjects b
+        JOIN student_info a ON a.student_no=b.student_no
+        <trim prefix="WHERE" prefixOverrides="AND | OR">
+            AND a.STATUS = '1'
+            <if test="studentNo != null">
+                AND a.student_no = #{studentNo}
+            </if>
+            <if test="identityNo != null">
+                AND a.identity_no = #{identityNo}
+            </if>
+            <if test="name != null">
+                AND a.name = #{name}
+            </if>
+            <if test="gender != null">
+                AND a.gender = #{gender}
+            </if>
+            <if test="phone != null">
+                AND a.phone = #{phone}
+            </if>
+            <if test="email != null">
+                AND a.email = #{email}
+            </if>
+            <if test="nativePlace != null">
+                AND a.native_place = #{nativePlace}
+            </if>
+            <if test="politicalLandscape != null">
+                AND a.political_landscape = #{politicalLandscape}
+            </if>
+            <if test="examineeNo != null">
+                AND a.examinee_no = #{examineeNo}
+            </if>
+            <if test="schoolYear != null">
+                AND a.school_year = #{schoolYear}
+            </if>
+            <if test="graduatedSchool != null">
+                AND a.graduated_school = #{graduatedSchool}
+            </if>
+            <if test="academyName != null">
+                AND a.academy_name = #{academyName}
+            </if>
+            <if test="collegeName != null">
+                AND a.college_name = #{collegeName}
+            </if>
+            <if test="collegeCode != null">
+                AND a.college_code = #{collegeCode}
+            </if>
+            <if test="majorName != null">
+                AND a.major_name = #{majorName}
+            </if>
+            <if test="majorCode != null">
+                AND a.major_code = #{majorCode}
+            </if>
+            <if test="className != null">
+                AND a.class_name = #{className}
+            </if>
+            <if test="nation != null">
+                AND a.nation = #{nation}
+            </if>
+            <if test="birthday != null">
+                AND a.birthday = #{birthday}
+            </if>
+        </trim>
+        GROUP BY
+        a.student_no,
+        a.name
+        ) t
+    </select>
+
+    <!--根据条件查询每个院的挂科人数的详细信息-->
+    <select id="pageGradeDetailByFailSubject"
+            resultType="Map"
+            parameterType="com.sunmnet.bigdata.web.model.request.predict.PagePredictFailSubjectREQ">
+        SELECT a.student_no,a.name,
+        SUM(CASE WHEN b.predict_scores > 68 THEN 0 ELSE 1 END) total FROM predict_student_subjects b
+        JOIN student_info a ON a.student_no=b.student_no
+        <trim prefix="WHERE" prefixOverrides="AND | OR">
+            AND a.STATUS = '1'
+            <if test="studentNo != null">
+                AND a.student_no = #{studentNo}
+            </if>
+            <if test="identityNo != null">
+                AND a.identity_no = #{identityNo}
+            </if>
+            <if test="name != null">
+                AND a.name = #{name}
+            </if>
+            <if test="gender != null">
+                AND a.gender = #{gender}
+            </if>
+            <if test="phone != null">
+                AND a.phone = #{phone}
+            </if>
+            <if test="email != null">
+                AND a.email = #{email}
+            </if>
+            <if test="nativePlace != null">
+                AND a.native_place = #{nativePlace}
+            </if>
+            <if test="politicalLandscape != null">
+                AND a.political_landscape = #{politicalLandscape}
+            </if>
+            <if test="examineeNo != null">
+                AND a.examinee_no = #{examineeNo}
+            </if>
+            <if test="schoolYear != null">
+                AND a.school_year = #{schoolYear}
+            </if>
+            <if test="graduatedSchool != null">
+                AND a.graduated_school = #{graduatedSchool}
+            </if>
+            <if test="academyName != null">
+                AND a.academy_name = #{academyName}
+            </if>
+            <if test="collegeName != null">
+                AND a.college_name = #{collegeName}
+            </if>
+            <if test="collegeCode != null">
+                AND a.college_code = #{collegeCode}
+            </if>
+            <if test="majorName != null">
+                AND a.major_name = #{majorName}
+            </if>
+            <if test="majorCode != null">
+                AND a.major_code = #{majorCode}
+            </if>
+            <if test="className != null">
+                AND a.class_name = #{className}
+            </if>
+            <if test="nation != null">
+                AND a.nation = #{nation}
+            </if>
+            <if test="birthday != null">
+                AND a.birthday = #{birthday}
+            </if>
+        </trim>
+        GROUP BY
+        a.student_no,
+        a.name
+    </select>
+
+</mapper>
+

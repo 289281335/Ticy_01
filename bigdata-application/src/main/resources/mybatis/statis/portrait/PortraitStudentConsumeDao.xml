@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+<mapper namespace="com.sunmnet.bigdata.web.dao.IPortraitStudentConsumeDAO">
+<!--
+save
+update
+findOne
+findOneByProperty
+findOneByCondition
+delete
+deleteByCondition
+deleteByProperty
+findAll
+queryPage
+count
+-->
+
+
+
+<sql id="Base_Column_List">
+  id as id ,
+  college_code as collegeCode ,
+  college_name as collegeName ,
+  major_code as majorCode ,
+  major_name as majorName ,
+  academy_name as academyName ,
+  class_name as className ,
+  nation as nation ,
+  gender as gender ,
+  student_place as studentPlace ,
+  consume_start_date as consumeStartDate ,
+  consume_end_date as consumeEndDate ,
+  consume_window as consumeWindow ,
+  consume_times as consumeTimes ,
+  consume_amount as consumeAmount 
+</sql>
+
+  <!-- 查询贫困生总人数 -->
+  <select id="povertyStudent" resultType="java.lang.Integer">
+    select count(DISTINCT student_no) countStudentNo from student_support_info where status
+    = '1'
+  </select>
+  <!-- 查询虚假贫困生总人数 -->
+  <select id="unPovertyStudent" resultType="java.lang.Integer">
+   SELECT count(distinct
+    a.student_no) countStudentNo from student_poverty_analyse as a,student_info as b
+    WHERE b.status = '1' and a.student_no = b.student_no
+    and poverty_level != '非贫困生' and any_result = '非贫困生'
+  </select>
+  <!-- 查询建议关爱总人数 -->
+  <select id="supportPovertyStudent" resultType="java.lang.Integer">
+    SELECT
+    count(distinct a.student_no) countStudentNo from student_poverty_analyse as
+    a,student_info as b
+    WHERE b.status = '1' and a.student_no = b.student_no and
+    poverty_level = '非贫困生' and any_result != '非贫困生'
+  </select>
+
+  <!--查询异常贫困学生列表-->
+  <select id="pageUnusualPovertyStudent" resultType="com.sunmnet.bigdata.web.model.response.student.StudentPovertyAnalyseRES" parameterType="StudentPovertyAnalyseREQ">
+    select
+		po.id,
+		po.student_no,info.student_name,info.grade,info.gender,
+		info.college_name,info.college_code,info.grade,info.support_type,
+		(1-po.poverty_probability) as poverty_probability,po.isFocus,po.isFocus,po.month_amount,info.support_amount,
+		po.reason
+		from student_poverty_analyse po, student_support_info info
+		where po.student_no = info.student_no and po.poverty_level!='非贫困生'
+		and info.school_year = (select max(school_year) from student_support_info)
+		and po.any_result='非贫困生' and <![CDATA[ po.poverty_probability < 0.15 ]]>
+		order by poverty_probability desc
+    --limit #{beginNum},#{endNum}
+  </select>
+    <!--更改贫困学生关注状态-->
+    <update id="updatePovertyStudentFocusStatus" parameterType="StudentPovertyAnalyseRES">
+        update student_poverty_analyse
+        <trim prefix="SET" suffixOverrides=",">
+          <if test="isFocus !=null and ''!=isFocus">
+            <![CDATA[
+	              	isFocus = #{isFocus,jdbcType=VARCHAR},
+	            ]]>
+          </if>
+          <if test="reason !=null and ''!=reason">
+            <![CDATA[
+	              	reason = #{reason,jdbcType=VARCHAR},
+	            ]]>
+          </if>
+          <if test="handle_result !=null and ''!=handle_result">
+            <![CDATA[
+	              	handle_result = #{handleResult,jdbcType=VARCHAR},
+	            ]]>
+          </if>
+        </trim>
+        where id = #{id,jdbcType=INTEGER}
+    </update>
+
+
+  <!--查询资助、扶贫学生列表-->
+  <select id="pageStudentPovertySupportREQ" resultType="StudentPovertySupportRES" parameterType="PageStudentPovertySupportREQ">
+    select
+    po.id,
+    po.student_no,info.name student_name,info.gender,
+    info.college_name,info.college_code,info.school_year,
+    po.poverty_probability,po.isFocus,po.isFocus,po.month_amount,po.poverty_level,po.handle_result,
+    sps.avg_month_amount_add,po.reason,po.handle_result as handleResult
+    from student_poverty_analyse po, student_info info,student_poverty_support sps
+    where po.student_no = info.student_no and po.student_no = sps.student_no
+    and po.poverty_level='非贫困生'
+    and po.any_result!='非贫困生' and po.poverty_probability > 0.85 and sps.avg_month_amount_add > 100
+    <if test="handleResult != null">
+      and po.handle_result = #{handleResult}
+    </if>
+    order by po.poverty_probability desc
+  </select>
+</mapper>
+

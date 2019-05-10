@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+<mapper namespace="com.sunmnet.bigdata.web.dao.statics.IReportDAO">
+
+
+    <!-- 查询行为预警每月数量 -->
+    <select id="selectWarningMonthCount" resultType="map" parameterType="String">
+        <![CDATA[
+       select w.warning_date as warningDate,
+              count(*) as warningCount
+        from
+	  	(select lw.student_no,
+	  	        substr(lw.warning_date,1,7) as warning_date,
+	  	       '晚归' as warning_type
+	  	  from alarm_late_back lw
+	  	 where substr(lw.warning_date,1,7) >= date_format(date_sub(now(), interval 11 month), '%Y-%m') and substr(lw.warning_date,1,7) <= date_format(now(),'%Y-%m')
+	 union all
+	  	select ow.student_no,
+	  	       substr(ow.warning_date,1,7) as warning_date,
+	  	       '失联' as warning_type
+	  	  from alarm_student_lost ow
+	  	 where substr(ow.warning_date,1,7) >= date_format(date_sub(now(), interval 11 month), '%Y-%m') and substr(ow.warning_date,1,7) <= date_format(now(),'%Y-%m')) w
+	  group by w.warning_date
+	  order by warningDate desc
+	  ]]>
+    </select>
+    <!-- 查询紧急预警每月数量 -->
+    <select id="selectEmerWarningMonthCount" resultType="Map" parameterType="String">
+    <![CDATA[
+    select substr(w.warning_date,1,7) as warningDate,
+              count(*) as warningCount
+      from
+	  	(select lw.student_no,
+	  	        lw.late_back_times as warning_date,
+	  	       '晚归' as warning_type
+	  	  from alarm_late_back lw
+	  	 where substr(lw.warning_date,1,7) >= #{fromDate} and substr(lw.warning_date,1,7) <= #{toDate}
+	  	   and lw.late_back_times >= 15
+	 union all
+	  	select ow.student_no,
+	  	       ow.warning_date as warning_date,
+	  	       '失联' as warning_type
+	  	  from alarm_student_lost ow
+	  	  where substr(ow.warning_date,1,7) >= #{fromDate} and substr(ow.warning_date,1,7) <= #{toDate}
+	  	   and ((ow.deal_flag = '0' and (UNIX_TIMESTAMP(ow.update_date) - UNIX_TIMESTAMP(ow.last_date))/(24*60*60) >= 5)
+	  	    or (ow.deal_flag = '1' and (UNIX_TIMESTAMP(ow.deal_date) - UNIX_TIMESTAMP(ow.last_date))/(24*60*60) >= 5))) w,
+	  	 student_info s
+	 where w.student_no = s.student_no
+	 group by substr(w.warning_date,1,7)
+     order by warningTimes desc
+     ]]>
+    </select>
+    <!-- 查询学业预警月统计趋势 -->
+    <select id="selectStudyWarningMonthCount" resultType="map">
+        SELECT substring(c.warning_date, 1, 7) AS warningDate,
+        count(c.truancy_times) AS warningCount
+        FROM alarm_student_truancy c
+        WHERE substring(c.warning_date, 1, 10) > DATE_SUB(CURDATE( ), interval 11 month)
+        GROUP BY substring(c.warning_date, 1, 7)
+    </select>
+    <!-- 查询未处理数量  -->
+    <select id="selectWarningNoDealCount" resultType="int">
+        SELECT
+        (SELECT count(*) from  alarm_student_truancy where deal_flag = 0) +
+        (SELECT count(*) from  alarm_late_back where deal_flag = 0) +
+        (SELECT count(*) from  alarm_student_lost where deal_flag = 0) +
+        (SELECT count(*) from  alarm_student_subjects where deal_flag = 0) as warningCount
+    </select>
+    <!-- 根据预警日期查询预警数量  -->
+    <select id="selectWarningCountByWarningDate" resultType="int" parameterType="string">
+        SELECT
+        (SELECT count(*) from  alarm_student_truancy where substr(warning_date,1,10) = #{warningDate}) +
+        (SELECT count(*) from  alarm_late_back where substr(warning_date,1,10) = #{warningDate}) +
+        (SELECT count(*) from  alarm_student_lost where substr(warning_date,1,10) = #{warningDate}) +
+        (SELECT count(*) from  alarm_student_subjects where substr(alarm_date,1,10) = #{warningDate}) as warningCount
+    </select>
+    <!--查询预警数量学院排名 -->
+    <select id="queryAlarmCollegeRank" resultType="map">
+        <![CDATA[
+		select u.college_code as collegeCode,
+		       u.college_name as collegeName,
+		       sum(count) as warningCount
+		 from
+			   (select la.college_code, la.college_name, count(*) as count from view_late_warning la where la.college_code is not null GROUP BY la.college_code, la.college_name
+				union all
+				select lo.college_code, lo.college_name, count(*) as count from view_lost_warning lo where lo.college_code is not null GROUP BY lo.college_code, lo.college_name
+				union all
+				select gr.college_code, gr.college_name, count(*) as count from view_subjects_warning gr where gr.college_code is not null GROUP BY gr.college_code, gr.college_name
+				union all
+				select tr.college_code, tr.college_name, count(*) as count from view_truancy_warning tr where tr.college_code is not null GROUP BY tr.college_code, tr.college_name) u
+	  GROUP BY u.college_code, u.college_name
+	  order by sum(count) desc
+		 limit 0,5
+     ]]>
+    </select>
+    <!-- 查询预警处理效率排名 -->
+    <select id="selectWarningDealRanking" resultType="map">
+        SELECT w.collegeName,
+        max(w.daelCount)/max(w.noDaelCount) as dealRate
+        from
+        (select u.college_name as collegeName,
+        case when u.deal_flag = '未处理' then sum(u.count) else 0 end as noDaelCount,
+        case when u.deal_flag = '已处理' then sum(u.count) else 0 end as daelCount
+        from (select la.college_name, la.deal_flag, count(*) as count from view_late_warning la where la.college_code is not null GROUP BY la.college_code, la.college_name, la.deal_flag
+        union all
+        select lo.college_name, lo.deal_flag, count(*) as count from view_lost_warning lo where lo.college_code is not null GROUP BY lo.college_code, lo.college_name, lo.deal_flag
+        union all
+        select gr.college_name, gr.deal_flag, count(*) as count from view_grade_warning gr where gr.college_code is not null GROUP BY gr.college_code, gr.college_name, gr.deal_flag
+        union all
+        select tr.college_name, tr.deal_flag, count(*) as count from view_truancy_warning tr where tr.college_code is not null GROUP BY tr.college_code, tr.college_name, tr.deal_flag) u
+        GROUP BY u.college_name, u.deal_flag) w
+        GROUP BY w.collegeName
+        order by dealRate desc
+        limit 0,5
+    </select>
+    <!-- 查询预警总数  -->
+    <select id="selectWarningCount" resultType="int">
+        SELECT
+        (SELECT count(*) from  alarm_student_truancy)  +
+        (SELECT count(*) from  alarm_late_back)  +
+        (SELECT count(*) from  alarm_student_lost) +
+        (SELECT count(*) from  alarm_student_subjects ) as warningCount
+    </select>
+    <!-- 查询预警错误数量  -->
+    <select id="selectWarningErrorCount" resultType="int">
+        SELECT
+        (SELECT count(*) as lateCount from alarm_late_back where late_back_reason = '正常回寝未夜归' and  deal_flag = '1') +
+        (SELECT count(*) as lostCount from alarm_student_lost  where lost_reason = '正常在校' and  deal_flag = '1') +
+        (SELECT count(*) as gradeCount from alarm_student_truancy  where result_warning = '无逃课' and  deal_flag = '1')
+    </select>
+
+</mapper>
+

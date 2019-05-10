@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+<mapper namespace="com.sunmnet.bigdata.web.dao.student.IStudentSocialFriendDAO">
+<!--
+save
+update
+findOne
+findOneByProperty
+findOneByCondition
+delete
+deleteByCondition
+deleteByProperty
+findAll
+queryPage
+count
+-->
+
+  <select id="listSociaFriend" resultType="StudentSocialFriend" parameterType="com.sunmnet.bigdata.web.model.request.student.StudentSocialFriendREQ">
+
+    SELECT DISTINCT
+    friend.id as id ,
+    friend.student_no as studentNo ,
+    friend.student_name as studentName ,
+    friend.gender as gender ,
+    friend.nation as nation ,
+    friend.college_name as collegeName ,
+    friend.college_code as collegeCode ,
+    friend.major_name as majorName ,
+    friend.major_code as majorCode ,
+    friend.class_name as className ,
+    friend.academy_name as academyName ,
+    friend.dorm as dorm ,
+    friend.grade as grade ,
+    friend.place as place ,
+    friend.friend_student_no as friendStudentNo ,
+    friend.friend_name as friendName ,
+    friend.social_no as socialNo ,
+    friend.relation_degree as relationDegree ,
+    friend.friend_college_name as friendCollegeName ,
+    friend.friend_major_name as friendMajorName ,
+    friend.friend_class_name as friendClassName ,
+    friend.friend_dorm as friendDorm ,
+    friend.friend_gender as friendGender ,
+    friend.friend_is_excellent_grades as friendIsExcellentGrades
+    FROM student_social_friend friend
+    JOIN student_info student on friend.student_no=student.student_no
+    <trim prefix="WHERE" prefixOverrides="AND | OR">
+      AND student.status = 1
+      AND friend.social_no is not null
+
+      <if test="collegeCode!=null">
+        AND friend.college_code = #{collegeCode}
+      </if>
+      <if test="majorCode!=null">
+        AND friend.major_code = #{majorCode}
+      </if>
+      <if test="className != null">
+        and friend.class_name=#{className}
+      </if>
+      <if test="nation != null">
+        and friend.nation=#{nation}
+      </if>
+      <if test="gender != null">
+        and friend.gender=#{gender}
+      </if>
+      <if test="place != null">
+        and friend.place=#{place}
+      </if>
+      <if test="academyName != null">
+        and friend.academy_name=#{academyName}
+      </if>
+    </trim>
+  </select>
+
+  <select id="listFriendsByStudentNo" resultType="StudentSocialFriend" parameterType="String">
+    SELECT  DISTINCT
+    friend.id as id ,
+    friend.student_no as studentNo ,
+    friend.student_name as studentName ,
+    friend.gender as gender ,
+    friend.nation as nation ,
+    friend.college_name as collegeName ,
+    friend.college_code as collegeCode ,
+    friend.major_name as majorName ,
+    friend.major_code as majorCode ,
+    friend.class_name as className ,
+    friend.academy_name as academyName ,
+    friend.dorm as dorm ,
+    friend.grade as grade ,
+    friend.place as place ,
+    friend.friend_student_no as friendStudentNo ,
+    friend.friend_name as friendName ,
+    friend.social_no as socialNo ,
+    friend.relation_degree as relationDegree ,
+    friend.friend_college_name as friendCollegeName ,
+    friend.friend_major_name as friendMajorName ,
+    friend.friend_class_name as friendClassName ,
+    friend.friend_dorm as friendDorm ,
+    friend.friend_gender as friendGender ,
+    friend.friend_is_excellent_grades as friendIsExcellentGrades
+    FROM student_social_friend friend
+    JOIN student_info student ON friend.student_no=student.student_no
+    JOIN student_social_friend friends ON friend.friend_student_no=student.student_no
+    WHERE student.status = 1 AND friend.social_no IS NOT NULL
+    AND friend.friend_name IS NOT NULL
+    AND friends.social_no IS NOT NULL AND friends.friend_name IS NOT NULL
+    AND friend.student_no=#{studentNo}
+  </select>
+
+
+
+</mapper>
+

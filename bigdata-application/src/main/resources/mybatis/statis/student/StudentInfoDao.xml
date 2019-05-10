@@ -1,0 +1,357 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+<mapper namespace="com.sunmnet.bigdata.web.dao.student.IStudentInfoDAO">
+<!--
+save
+update
+findOne
+findOneByProperty
+findOneByCondition
+delete
+deleteByCondition
+deleteByProperty
+findAll
+queryPage
+count
+-->
+
+  <!-- 查询学生信息 -->
+  <select id="getStudentByNo" resultType="StudentInfoRES" parameterType="String" >
+    select
+     id as id ,
+  student_no as studentNo ,
+  identity_no as identityNo ,
+  name as name ,
+  gender as gender ,
+  phone as phone ,
+  email as email ,
+  native_place as nativePlace ,
+  political_landscape as politicalLandscape ,
+  examinee_no as examineeNo ,
+  school_year as schoolYear ,
+  graduated_school as graduatedSchool ,
+  academy_name as academyName ,
+  college_name as collegeName ,
+  college_code as collegeCode ,
+  major_name as majorName ,
+  major_code as majorCode ,
+  class_name as className ,
+  status as status ,
+  nation as nation ,
+  birthday as birthday
+    from student_info
+    where student_no = #{studentNo}
+  </select>
+
+  <!-- 根据条件查询学生信息 -->
+  <select id="listStudentInfo" resultType="com.sunmnet.bigdata.web.model.response.student.StudentInfoRES" parameterType="com.sunmnet.bigdata.web.model.request.student.StudentInfoREQ">
+    SELECT
+    id as id ,
+    student_no as studentNo ,
+    identity_no as identityNo ,
+    name as name ,
+    gender as gender ,
+    phone as phone ,
+    email as email ,
+    native_place as nativePlace ,
+    political_landscape as politicalLandscape ,
+    examinee_no as examineeNo ,
+    school_year as schoolYear ,
+    graduated_school as graduatedSchool ,
+    academy_name as academyName ,
+    college_name as collegeName ,
+    college_code as collegeCode ,
+    major_name as majorName ,
+    major_code as majorCode ,
+    class_name as className ,
+    status as status ,
+    nation as nation ,
+    birthday as birthday
+    FROM
+    student_info
+    <trim prefix="WHERE" prefixOverrides="AND | OR">
+      <if test="studentInfoREQ.studentNo != null" >
+        and student_no = #{studentNo}
+      </if>
+      <if test="studentInfoREQ.identityNo != null" >
+        and identity_no = #{identityNo}
+      </if>
+      <if test="studentInfoREQ.name != null" >
+        and name = #{name}
+      </if>
+      <if test="studentInfoREQ.gender != null" >
+        and gender = #{gender}
+      </if>
+      <if test="studentInfoREQ.phone != null" >
+        and phone = #{phone}
+      </if>
+      <if test="studentInfoREQ.email != null" >
+        and email = #{email}
+      </if>
+
+      <if test="studentInfoREQ.nativePlace != null" >
+        and native_place = #{nativePlace}
+      </if>
+      <if test="studentInfoREQ.politicalLandscape != null" >
+        and political_landscape = #{politicalLandscape}
+      </if>
+      <if test="studentInfoREQ.examineeNo != null" >
+        and examinee_no = #{examineeNo}
+      </if>
+      <if test="studentInfoREQ.schoolYear != null" >
+        and school_year = #{schoolYear}
+      </if>
+      <if test="studentInfoREQ.graduatedSchool != null" >
+        and graduated_school = #{graduatedSchool}
+      </if>
+      <if test="studentInfoREQ.academyName != null" >
+        and academy_name = #{academyName}
+      </if>
+      <if test="studentInfoREQ.collegeName != null" >
+        and college_name = #{collegeName}
+      </if>
+      <if test="studentInfoREQ.collegeCode != null" >
+        and college_code = #{collegeCode}
+      </if>
+      <if test="studentInfoREQ.majorName != null" >
+        and major_name = #{majorName}
+      </if>
+      <if test="studentInfoREQ.majorCode != null" >
+        and major_code = #{majorCode}
+      </if>
+      <if test="studentInfoREQ.className != null" >
+        and class_name = #{className}
+      </if>
+      <if test="studentInfoREQ.status != null" >
+        and status = #{status}
+      </if>
+      <if test="studentInfoREQ.nation != null" >
+        and nation = #{nation}
+      </if>
+      <if test="studentInfoREQ.birthday != null" >
+        and birthday = #{birthday}
+      </if>
+
+    </trim>
+
+    <if test="sort!=null">
+      order by ${sort.toString().replace(":","")}
+    </if>
+
+  </select>
+
+
+
+  <select id="countCategoryByGender" resultType="java.util.HashMap"
+          parameterType="com.sunmnet.bigdata.web.model.request.student.StudentInfoREQ">
+    SELECT count(*) ,gender
+    FROM student_info
+    <trim prefix="WHERE" prefixOverrides="AND | OR">
+      <if test="studentNo != null" >
+        and student_no = #{studentNo}
+      </if>
+      <if test="identityNo != null" >
+        and identity_no = #{identityNo}
+      </if>
+      <if test="name != null" >
+        and name = #{name}
+      </if>
+      <if test="gender != null" >
+        and gender = #{gender}
+      </if>
+      <if test="phone != null" >
+        and phone = #{phone}
+      </if>
+      <if test="email != null" >
+        and email = #{email}
+      </if>
+
+      <if test="nativePlace != null" >
+        and native_place = #{nativePlace}
+      </if>
+      <if test="politicalLandscape != null" >
+        and political_landscape = #{politicalLandscape}
+      </if>
+      <if test="examineeNo != null" >
+        and examinee_no = #{examineeNo}
+      </if>
+      <if test="schoolYear != null" >
+        and school_year = #{schoolYear}
+      </if>
+      <if test="graduatedSchool != null" >
+        and graduated_school = #{graduatedSchool}
+      </if>
+      <if test="academyName != null" >
+        and academy_name = #{academyName}
+      </if>
+      <if test="collegeName != null" >
+        and college_name = #{collegeName}
+      </if>
+      <if test="collegeCode != null" >
+        and college_code = #{collegeCode}
+      </if>
+      <if test="majorName != null" >
+        and major_name = #{majorName}
+      </if>
+      <if test="majorCode != null" >
+        and major_code = #{majorCode}
+      </if>
+      <if test="className != null" >
+        and class_name = #{className}
+      </if>
+      <if test="status != null" >
+        and status = #{status}
+      </if>
+      <if test="nation != null" >
+        and nation = #{nation}
+      </if>
+      <if test="birthday != null" >
+        and birthday = #{birthday}
+      </if>
+    </trim>
+    GROUP BY gender
+
+  </select>
+
+
+  <!-- 根据条件查询学生信息 -->
+  <select id="countStudentInfo" resultType="Integer" parameterType="StudentInfoREQ">
+    SELECT
+    count(id)
+    FROM
+    student_info
+    <trim prefix="WHERE" prefixOverrides="AND | OR">
+      <if test="studentInfoREQ.studentNo != null" >
+        and student_no = #{studentNo}
+      </if>
+      <if test="studentInfoREQ.identityNo != null" >
+        and identity_no = #{identityNo}
+      </if>
+      <if test="studentInfoREQ.name != null" >
+        and name = #{name}
+      </if>
+      <if test="studentInfoREQ.gender != null" >
+        and gender = #{gender}
+      </if>
+      <if test="studentInfoREQ.phone != null" >
+        and phone = #{phone}
+      </if>
+      <if test="studentInfoREQ.email != null" >
+        and email = #{email}
+      </if>
+
+      <if test="studentInfoREQ.nativePlace != null" >
+        and native_place = #{nativePlace}
+      </if>
+      <if test="studentInfoREQ.politicalLandscape != null" >
+        and political_landscape = #{politicalLandscape}
+      </if>
+      <if test="studentInfoREQ.examineeNo != null" >
+        and examinee_no = #{examineeNo}
+      </if>
+      <if test="studentInfoREQ.schoolYear != null" >
+        and school_year = #{schoolYear}
+      </if>
+      <if test="studentInfoREQ.graduatedSchool != null" >
+        and graduated_school = #{graduatedSchool}
+      </if>
+      <if test="studentInfoREQ.academyName != null" >
+        and academy_name = #{academyName}
+      </if>
+      <if test="studentInfoREQ.collegeName != null" >
+        and college_name = #{collegeName}
+      </if>
+      <if test="studentInfoREQ.collegeCode != null" >
+        and college_code = #{collegeCode}
+      </if>
+      <if test="studentInfoREQ.majorName != null" >
+        and major_name = #{majorName}
+      </if>
+      <if test="studentInfoREQ.majorCode != null" >
+        and major_code = #{majorCode}
+      </if>
+      <if test="studentInfoREQ.className != null" >
+        and class_name = #{className}
+      </if>
+      <if test="studentInfoREQ.status != null" >
+        and status = #{status}
+      </if>
+      <if test="studentInfoREQ.nation != null" >
+        and nation = #{nation}
+      </if>
+      <if test="studentInfoREQ.birthday != null" >
+        and birthday = #{birthday}
+      </if>
+
+    </trim>
+
+    <if test="sort!=null">
+      order by ${sort.toString().replace(":","")}
+    </if>
+
+  </select>
+
+  <!-- 根据条件查询学生数量 -->
+  <select id="countStudentInfoByCondition" resultType="int" parameterType="com.sunmnet.bigdata.web.model.request.student.WholePortraitREQ">
+    select count(DISTINCT r.student_no)
+    from student_info si,
+    student_consumption_index r
+    WHERE r.student_no = si.student_no
+    and si.status = '1'
+    <if test="academyName != null and academyName != ''" >
+      and si.academy_name = #{academyName}
+    </if>
+    <if test="collegeCode != null and collegeCode != ''" >
+      and si.college_code = #{collegeCode}
+    </if>
+    <if test="majorCode != null and majorCode != ''" >
+      and si.major_code = #{majorCode}
+    </if>
+    <if test="className != null and className != ''" >
+      and si.class_name = #{className}
+    </if>
+    <if test="nation != null and nation != ''" >
+      and si.nation = #{nation}
+    </if>
+    <if test="gender != null and gender != ''" >
+      and si.gender = #{gender}
+    </if>
+    <if test="nativePlace != null and nativePlace != ''" >
+      and si.native_place = #{nativePlace}
+    </if>
+  </select>
+
+  <!--根据性别和学位统计学生结构-->
+  <select id="countStructureByDegreeAndGender" resultType="Map" parameterType="StudentInfoREQ">
+    select count(*),degree,gender from student_info si
+    <trim prefix="WHERE" prefixOverrides="AND | OR">
+    <if test="gender != null and gender != ''" >
+      and si.gender = #{gender}
+    </if>
+    <if test="degree != null and '' != degree" >
+      and si.degree = #{degree}
+    </if>
+    </trim>
+    group by si.degree,si.gender
+  </select>
+
+  <!--根据学位和生源地统计学生分布-->
+  <select id="countStructureByDegreeAndNativePlace" resultType="Map" parameterType="StudentInfoREQ">
+    select count(*),degree,native_place from student_info si
+    <trim prefix="WHERE" prefixOverrides="AND | OR">
+    <if test="degree != null and '' != degree" >
+      and si.degree = #{degree}
+    </if>
+    <if test="nativePlace != null and '' != nativePlace" >
+      and si.native_place = #{nativePlace}
+    </if>
+    </trim>
+    group by si.degree,si.native_place
+  </select>
+
+
+
+</mapper>
+

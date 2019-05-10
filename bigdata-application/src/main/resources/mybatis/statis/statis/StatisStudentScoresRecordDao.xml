@@ -1,0 +1,230 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+<mapper namespace="com.sunmnet.bigdata.web.dao.IStatisStudentScoresRecordDAO">
+<!--
+save
+update
+findOne
+findOneByProperty
+findOneByCondition
+delete
+deleteByCondition
+deleteByProperty
+findAll
+queryPage
+count
+-->
+
+
+
+<sql id="Base_Column_List">
+  id as id ,
+  student_no as studentNo ,
+  student_name as studentName ,
+  college_code as collegeCode ,
+  major_code as majorCode ,
+  semester as semester ,
+  average_score as averageScore ,
+  fail_times as failTimes 
+</sql>
+  <!-- 根据条件查询挂科人数 -->
+  <select id="selectFailGradesStudentCount" resultType="Integer" parameterType="StudentInfoREQ">
+    select count(DISTINCT sr.student_no)
+    from statis_student_scores_record sr,
+    student_info si
+    where
+    sr.student_number = si.student_number
+    and fail_times > 0
+    <if test="academyName != null and academyName != ''" >
+      and si.academy_name = #{academyName}
+    </if>
+    <if test="collegeCode != null and collegeCode != ''" >
+      and si.college_code = #{collegeCode}
+    </if>
+    <if test="majorCode != null and majorCode != ''" >
+      and si.major_code = #{majorCode}
+    </if>
+    <if test="className != null and className != ''" >
+      and si.class_name = #{className}
+    </if>
+    <if test="nation != null and nation != ''" >
+      and si.nation = #{nation}
+    </if>
+    <if test="gender != null and gender != ''" >
+      and si.gender = #{gender}
+    </if>
+    <if test="nativePlace != null and nativePlace != ''" >
+      and si.native_place = #{nativePlace}
+    </if>
+    <if test="schoolYear != null and schoolYear != ''" >
+      and SUBSTR(sr.school_term, 1, 4) = #{schoolYear}
+    </if>
+    <if test="schoolYear == null or schoolYear == ''" >
+      and si.status = '1'
+    </if>
+  </select>
+
+  <!--查询学期的平均成绩  -->
+  <select id="selectSemesterAverageScoreByStudentNo" resultType="Map" parameterType="String" >
+    SELECT
+    s.semester as semester,
+    round(s.average_score,0) as averageScore,
+    fail_times as failTimes
+    FROM
+    statis_student_scores_record s
+    WHERE
+    s.student_no = #{studentNo}
+    ORDER BY
+    s.semester
+  </select>
+
+  <!-- 查询专业平均成绩 -->
+  <select id="selectSemesterAverageScoreByMajorCode" resultType="java.util.Map" parameterType="String" >
+     SELECT
+    s.semester as semester,
+    round(AVG(s.average_score),0) as averageScore
+    FROM
+    statis_student_scores_record s
+    WHERE s.major_code = #{majorCode}
+    AND s.average_score > 0
+    GROUP BY s.semester
+  </select>
+  <!-- 根据学号查询上课情况 -->
+  <select id="selectClassRecordByStudentNo" resultType="map" parameterType="String" >
+    select
+    <include refid="Base_Column_List" />
+    <![CDATA[
+    from statis_student_course
+    where
+    	course_date >= #{fromDate}
+    and course_date <= #{toDate}
+    and student_no = #{studentNo}
+    ]]>
+  </select>
+
+  <!-- 按照学期查询学生上课率 -->
+  <select id="selectClassRateByStudentNumberAndTerm" resultType="map" parameterType="String" >
+    <![CDATA[
+	  	  select school_term as schoolTerm,
+  round((sum(normal_times) + sum(late_times) + sum(left_times))/(sum(truancy_times) + sum(normal_times) + sum(late_times) + sum(left_times)) * 100,2) as courseRate
+  from statis_student_course
+  where student_no = #{studentNo}
+  group by school_term
+   ]]>
+  </select>
+  <!-- 查询学生到课时间 -->
+  <select id="selectClassTimeByStudentNo" resultType="map" parameterType="String" >
+    <![CDATA[
+	  	select round(sum(late_times)/(sum(truancy_times) + sum(normal_times) + sum(late_times) + sum(left_times))* 100, 2) as lateRate,
+	  	       round(sum(truancy_times)/(sum(truancy_times) + sum(normal_times) + sum(late_times) + sum(left_times))* 100, 2) as truancyRate,
+	  	       round(sum(normal_times)/(sum(truancy_times) + sum(normal_times) + sum(late_times) + sum(left_times))* 100, 2) as normalRate
+	      from statis_student_course
+	    where
+	    	course_date >= #{fromDate}
+	    and course_date <= #{toDate}
+	    and student_no = #{studentNo}
+   ]]>
+  </select>
+  <!--查询学生到课详情  -->
+  <select id="selectClassDetailByStudentNo" resultType="map" parameterType="StudentInfoREQ" >
+    select *
+    from student_course
+    where student_no = #{studentNo}
+    order by course_date desc
+  </select>
+  <!-- 查询学生疑似逃课信息 -->
+  <select id="selectTruancyTimesByCondition" resultType="map" parameterType="StudentInfoREQ">
+    SELECT
+    m.truancy_times as truancyTime,
+    count(*) as totalCount
+    FROM
+    (SELECT
+    r.student_no,
+    count(r.student_no) as truancy_times
+    FROM
+    alarm_student_truancy r,
+    student_info si
+    WHERE
+    r.student_no = si.student_no
+    <if test="academyName != null and academyName != ''" >
+      and si.academy_name = #{academyName}
+    </if>
+    <if test="collegeCode != null and collegeCode != ''" >
+      and si.college_code = #{collegeCode}
+    </if>
+    <if test="majorCode != null and majorCode != ''" >
+      and si.major_code = #{majorCode}
+    </if>
+    <if test="className != null and className != ''" >
+      and si.class_name = #{className}
+    </if>
+    <if test="nation != null and nation != ''" >
+      and si.nation = #{nation}
+    </if>
+    <if test="gender != null and gender != ''" >
+      and si.gender = #{gender}
+    </if>
+    <if test="studentPlace != null and studentPlace != ''" >
+      and si.student_place = #{studentPlace}
+    </if>
+    <if test="startDate != null and startDate != ''" >
+      <![CDATA[ and r.course_start_date >= #{startDate} ]]>
+    </if>
+    <if test="endDate != null and endDate != ''" >
+      <![CDATA[ and r.course_end_date <= #{endDate} ]]>
+    </if>
+    GROUP BY
+    r.student_no
+    ) m
+    GROUP BY
+    m.truancy_times
+    ORDER BY
+    m.truancy_times
+  </select>
+  <!-- 查询意思旷课学生信息 -->
+  <select id="selectTruancyStudentByCondition" resultType="map" parameterType="StudentInfoREQ">
+    SELECT
+    si.student_no as studentNo,
+    si.name as studentName,
+    count(si.student_no) as truancyTimes
+    FROM
+    alarm_student_truancy r,
+    student_info si
+    WHERE
+    r.student_no = si.student_no
+    <if test="academyName != null and academyName != ''" >
+      and si.academy_name = #{academyName}
+    </if>
+    <if test="collegeCode != null and collegeCode != ''" >
+      and si.college_code = #{collegeCode}
+    </if>
+    <if test="majorCode != null and majorCode != ''" >
+      and si.major_code = #{majorCode}
+    </if>
+    <if test="className != null and className != ''" >
+      and si.class_name = #{className}
+    </if>
+    <if test="nation != null and nation != ''" >
+      and si.nation = #{nation}
+    </if>
+    <if test="gender != null and gender != ''" >
+      and si.gender = #{gender}
+    </if>
+    <if test="studentPlace != null and studentPlace != ''" >
+      and si.student_place = #{studentPlace}
+    </if>
+    <if test="startDate != null and startDate != ''" >
+      <![CDATA[ and r.course_start_date >= #{startDate} ]]>
+    </if>
+    <if test="endDate != null and endDate != ''" >
+      <![CDATA[ and r.course_end_date <= #{endDate} ]]>
+    </if>
+    GROUP BY
+    si.student_no,
+    si.name
+    ORDER BY truancyTimes desc
+  </select>
+</mapper>
+

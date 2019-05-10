@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.sunmnet.bigdata.web.dao.student.IStudentConsumeRegularDAO" >
+  
+  <!--根据学号查询三餐规律度  -->
+  <select id="getDietRegularByStudentNo" resultType="java.math.BigDecimal" >
+   select s.diet_index
+     from student_consumption_index s
+    where s.student_no = #{studentNo}
+  </select>
+  
+  <!-- 根据专业代码查询三餐规律度 -->
+  <select id="getDietRegularByMajorCode" resultType="java.math.BigDecimal" >
+	  select AVG(i.diet_index)
+	    from student_consumption_index i
+   left join student_info s
+          on i.student_no = s.student_no
+	   where s.major_code = #{majorCode}
+	     and s.status = '1'
+  </select>
+  
+  <!-- 查询三餐规律度总条数 -->
+  <select id="countDietRegular" resultType="int" >
+  	select count(*)
+  	  from student_consumption_index s
+  	 where s.diet_index > 0
+  </select>
+  
+  <!-- 查询指定行号的三餐规律度 -->
+  <select id="countDietRegularByCondition" resultType="com.sunmnet.bigdata.web.model.entity.student.StudentConsumptionIndex" parameterType="int">
+  	  	select *
+	  	  from student_consumption_index s
+	  	 where s.diet_index > 0
+	  order by s.diet_index asc
+	     limit ${lineNo}, 1
+  </select>
+  
+  <!-- 根据条件查询三餐规律度人数 -->
+  <select id="selectDietRegularCountByCondition" resultType="int" parameterType="com.sunmnet.bigdata.web.model.request.student.WholePortraitREQ">
+        <![CDATA[ 
+	  	 select count(DISTINCT r.stuNo)
+	  	   from student_consumption_index r,
+	  	        student_info si
+	 	   WHERE 
+			    r.student_no = si.student_no
+	        and r.diet_index >= #{eatIndex}
+	        and si.status = '1'
+         ]]>
+		 <if test="academyName != null and academyName != ''" >
+            and si.academy_name = #{academyName}
+         </if>
+		 <if test="collegeCode != null and collegeCode != ''" >
+            and si.college_code = #{collegeCode}
+         </if>
+         <if test="majorCode != null and majorCode != ''" >
+            and si.major_code = #{majorCode}
+         </if>
+          <if test="className != null and className != ''" >
+           and si.class_name = #{className}
+         </if>
+         <if test="nation != null and nation != ''" >
+            and si.nation = #{nation}
+         </if>
+         <if test="gender != null and gender != ''" >
+            and si.gender = #{gender}
+         </if>
+         <if test="nativePlace != null and nativePlace != ''" >
+            and si.native_place = #{nativePlace}
+         </if>
+  </select>
+  
+</mapper>

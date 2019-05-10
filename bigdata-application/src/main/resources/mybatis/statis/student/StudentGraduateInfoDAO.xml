@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.sunmnet.bigdata.web.dao.student.IStudentGraduateInfoDAO" >
+
+    <select id="selectByPrimaryKey" resultType="com.sunmnet.bigdata.web.model.entity.student.StudentGraduateInfo" parameterType="java.lang.Long" >
+        select
+        id, graduation_date, student_no, type, school_code, industry_code, position_code,
+        create_time, modify_time
+        from graduate_info
+        where id = #{id,jdbcType=BIGINT}
+    </select>
+ 	<!--查询和自己设置读研目标相同的学长的学号，更具自己学号和学长毕业时间-->
+	<select id="getReadStudentNo" resultType="java.lang.String" parameterType="java.util.Map" >
+        select  gi.student_no from graduate_info gi ,student_graduation_target sgt
+
+			where gi.school_code = sgt.school_code and sgt.student_no = #{studentNo,jdbcType=VARCHAR}
+
+				and gi.type='READ'
+
+				and gi.graduation_date in
+				<foreach item="item" index="index" collection="graduationDate" open="(" separator="," close=")">
+				#{item}
+				</foreach>
+    </select>
+
+
+	<!--查询和自己设置就业目标相同的学长的学号，根据自己学号和学长毕业时间-->
+	<select id="getWorkStudentNo" resultType="java.lang.String" parameterType="java.util.Map" >
+        select  gi.student_no from graduate_info gi ,student_graduation_target sgt
+			where gi.industry_code = sgt.industry_code and sgt.student_no = #{studentNo,jdbcType=VARCHAR}
+
+			 	and gi.type='WORK'
+
+				and gi.position_code in (select sgt2.position_code from student_graduation_target sgt2 where sgt2.student_no=#{studentNo,jdbcType=VARCHAR})
+
+				and gi.graduation_date in
+				<foreach item="item" index="index" collection="graduationDate" open="(" separator="," close=")">
+				#{item}
+				</foreach>
+				GROUP BY gi.student_no ;
+
+    </select>
+
+	<!--查询毕业生信息根据毕业时间集合-->
+	<select id="getGraduateInfoByGraduationDateList" resultType="com.sunmnet.bigdata.web.model.entity.student.StudentGraduateInfo" parameterType="list" >
+       select
+        id, graduation_date, student_no, type, school_code, industry_code, position_code,
+        create_time, modify_time
+         from graduate_info
+           where type !="other" and
+                graduation_date in
+				<foreach item="item" index="index" collection="list" open="(" separator="," close=")">
+				#{item}
+				</foreach>
+    </select>
+
+	<!--查询毕业生信息根据毕业时间-->
+	<select id="getGraduateInfoByGraduationDate" resultType="com.sunmnet.bigdata.web.model.entity.student.StudentGraduateInfo" parameterType="java.lang.String" >
+       select
+        id, graduation_date, student_no, type, school_code, industry_code, position_code,
+        create_time, modify_time
+         from graduate_info
+           where type !="other" and
+                graduation_date = #{graduationDate,jdbcType=VARCHAR}
+    </select>
+
+
+
+    <insert id="insertSelective" parameterType="com.sunmnet.bigdata.web.model.entity.student.StudentGraduateInfo" >
+        insert into graduate_info
+        <trim prefix="(" suffix=")" suffixOverrides="," >
+            <if test="id != null" >
+                id,
+            </if>
+            <if test="graduationDate != null" >
+                graduation_date,
+            </if>
+            <if test="studentNo != null" >
+                student_no,
+            </if>
+            <if test="type != null" >
+                type,
+            </if>
+            <if test="schoolCode != null" >
+                school_code,
+            </if>
+            <if test="industryCode != null" >
+                industry_code,
+            </if>
+            <if test="positionCode != null" >
+                position_code,
+            </if>
+            <if test="createTime != null" >
+                create_time,
+            </if>
+            <if test="modifyTime != null" >
+                modify_time,
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides="," >
+            <if test="id != null" >
+                #{id,jdbcType=BIGINT},
+            </if>
+            <if test="graduationDate != null" >
+                #{graduationDate,jdbcType=VARCHAR},
+            </if>
+            <if test="studentNo != null" >
+                #{studentNo,jdbcType=VARCHAR},
+            </if>
+            <if test="type != null" >
+                #{type,jdbcType=VARCHAR},
+            </if>
+            <if test="schoolCode != null" >
+                #{schoolCode,jdbcType=VARCHAR},
+            </if>
+            <if test="industryCode != null" >
+                #{industryCode,jdbcType=VARCHAR},
+            </if>
+            <if test="positionCode != null" >
+                #{positionCode,jdbcType=VARCHAR},
+            </if>
+            <if test="createTime != null" >
+                #{createTime,jdbcType=VARCHAR},
+            </if>
+            <if test="modifyTime != null" >
+                #{modifyTime,jdbcType=VARCHAR},
+            </if>
+        </trim>
+    </insert>
+
+    <update id="updateByPrimaryKeySelective" parameterType="com.sunmnet.bigdata.web.model.entity.student.StudentGraduateInfo" >
+        update graduate_info
+        <set >
+            <if test="graduationDate != null" >
+                graduation_date = #{graduationDate,jdbcType=VARCHAR},
+            </if>
+            <if test="studentNo != null" >
+                student_no = #{studentNo,jdbcType=VARCHAR},
+            </if>
+            <if test="type != null" >
+                type = #{type,jdbcType=VARCHAR},
+            </if>
+            <if test="schoolCode != null" >
+                school_code = #{schoolCode,jdbcType=VARCHAR},
+            </if>
+            <if test="industryCode != null" >
+                industry_code = #{industryCode,jdbcType=VARCHAR},
+            </if>
+            <if test="positionCode != null" >
+                position_code = #{positionCode,jdbcType=VARCHAR},
+            </if>
+            <if test="createTime != null" >
+                create_time = #{createTime,jdbcType=VARCHAR},
+            </if>
+            <if test="modifyTime != null" >
+                modify_time = #{modifyTime,jdbcType=VARCHAR},
+            </if>
+        </set>
+        where id = #{id,jdbcType=BIGINT}
+    </update>
+
+    <delete id="deleteByPrimaryKey" parameterType="java.lang.Long" >
+        delete from graduate_info
+        where id = #{id,jdbcType=BIGINT}
+    </delete>
+
+</mapper>

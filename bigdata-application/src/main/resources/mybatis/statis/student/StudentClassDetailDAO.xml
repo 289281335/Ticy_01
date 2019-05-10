@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.sunmnet.bigdata.web.dao.student.IStudentClassDetailDAO" >
+  
+  <!--查询学生到课详情  -->
+  <select id="selectClassDetailByStudentNo" resultType="com.sunmnet.bigdata.web.model.entity.student.StudentClassDetail" parameterType="String" >
+    select 
+    id, student_no, course_name, course_date, course_status
+    from student_course
+    where student_no = #{studentNo}
+ order by course_date desc
+  </select>
+</mapper>

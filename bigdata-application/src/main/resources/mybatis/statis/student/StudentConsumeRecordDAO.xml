@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.sunmnet.bigdata.web.dao.student.IStudentConsumeRecordDAO" >
+  
+  <!-- 查询学生最近消费记录  -->
+  <select id="listLatestDietSituation" resultType="com.sunmnet.bigdata.web.model.entity.student.StudentConsumeRecord" parameterType="com.sunmnet.bigdata.web.model.entity.student.StudentConsumeRecord" >
+	  select
+	  student_no, consume_date, student_name, breakfast_times, lunch_times, dinner_times,
+    supper_times
+    <![CDATA[
+	    from statis_student_consume
+	    where student_no = #{studentNo}
+	      and consume_date <= date_format(#{consumeDate}, '%Y-%m-%d')
+	      and consume_date >= date_format(date_sub(#{consumeDate}, interval 15 day), '%Y-%m-%d')
+	 order by consume_date
+	 ]]> 
+  </select>
+  
+  <!-- 查询最新的消费日期 -->
+  <select id="getLatestDietDate" resultType="string" >
+      SELECT max(consume_date) FROM statis_student_consume
+  </select>
+</mapper>

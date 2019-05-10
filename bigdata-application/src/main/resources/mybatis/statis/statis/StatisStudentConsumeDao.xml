@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+<mapper namespace="com.sunmnet.bigdata.web.dao.statics.IStatisStudentConsumeDAO">
+<!--
+save
+update
+findOne
+findOneByProperty
+findOneByCondition
+delete
+deleteByCondition
+deleteByProperty
+findAll
+queryPage
+count
+-->
+
+
+
+  <sql id="Base_Column_List">
+    student_no as studentNo ,
+    student_name as studentName ,
+    gender as gender ,
+    consume_date as consumeDate ,
+    breakfast_amount as breakfastAmount ,
+    breakfast_times as breakfastTimes ,
+    lunch_amount as lunchAmount ,
+    lunch_times as lunchTimes ,
+    dinner_amount as dinnerAmount ,
+    dinner_times as dinnerTimes ,
+    supper_amount as supperAmount ,
+    supper_times as supperTimes ,
+    fruit_amount as fruitAmount ,
+    fruit_times as fruitTimes ,
+    internet_amount as internetAmount ,
+    market_amount as marketAmount ,
+    bath_amount as bathAmount ,
+    book_amount as bookAmount ,
+    hospital_amount as hospitalAmount ,
+    other_amount as otherAmount
+  </sql>
+
+  <!-- 根据条件查询月消费金额趋势(综合画像) -->
+  <select id="avgMonthConsume" resultType="java.util.Map" parameterType="StudentInfoREQ">
+    SELECT
+    m.consume_date as consumeDate,
+    SUM(m.amount) / count(*) / 100 AS averageAmount
+    FROM
+    (SELECT
+    sc.student_no,
+    sc.consume_date,
+    sum(sc.breakfast_amount) + sum(sc.lunch_amount) + sum(sc.dinner_amount) + sum(sc.supper_amount) + sum(sc.fruit_amount) +
+    sum(sc.bath_amount) + sum(sc.book_amount) + sum(sc.hospital_amount) + sum(sc.market_amount) + sum(sc.internet_amount) + sum(sc.other_amount) AS amount
+    FROM
+    statis_student_consume sc,
+    student_info si
+    WHERE
+    sc.student_no = si.student_no
+    <if test="academyName != null and academyName != ''" >
+      and si.academy_name = #{academyName}
+    </if>
+    <if test="collegeCode != null and collegeCode != ''" >
+      and si.college_code = #{collegeCode}
+    </if>
+    <if test="majorCode != null and majorCode != ''" >
+      and si.major_code = #{majorCode}
+    </if>
+    <if test="className != null and className != ''" >
+      and si.class_name = #{className}
+    </if>
+    <if test="nation != null and nation != ''" >
+      and si.nation = #{nation}
+    </if>
+    <if test="gender != null and gender != ''" >
+      and sc.gender = #{gender}
+    </if>
+    <if test="nativePlace != null and nativePlace != ''" >
+      and si.native_place = #{nativePlace}
+    </if>
+    <if test="startDate != null and startDate != ''" >
+      <![CDATA[ and sc.consume_date >= #{startDate} ]]>
+    </if>
+    <if test="endDate != null and endDate != ''" >
+      <![CDATA[ and sc.consume_date <= #{endDate} ]]>
+    </if>
+    GROUP BY
+    sc.student_no,
+    sc.consume_date
+    HAVING amount > 0
+    ) m
+    GROUP BY
+    m.consume_date
+    ORDER BY
+    m.consume_date
+  </select>
+</mapper>
+

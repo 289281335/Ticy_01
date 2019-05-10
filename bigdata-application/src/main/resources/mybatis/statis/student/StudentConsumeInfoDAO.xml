@@ -1,0 +1,643 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.sunmnet.bigdata.web.dao.student.IStudentConsumeInfoDAO" >
+  
+  <!-- 查询三餐消费月份信息 -->
+  <select id="listSchoolDietMonth" resultType="java.util.Map">
+   <![CDATA[
+	select MAX(consume_date) as maxDate,
+	       MIN(consume_date) as minDate
+	  FROM statis_student_consume s,
+	      (select MAX(CONCAT(consume_date, '-01')) as maxDate from statis_student_consume) n
+	 WHERE 
+	      (s.breakfast_amount + s.lunch_amount + s.dinner_amount + s.supper_amount) > 0
+	      and consume_date <= n.maxDate
+		  and consume_date >= date_format(date_sub(n.maxDate, interval 11 month), '%Y-%m')
+	]]> 	  
+  </select>
+  
+  <!-- 查询全校学生每月平均三餐消费金额  -->
+  <select id="listSchoolAverageDietDataMonth" resultType="java.util.Map" parameterType="String">
+    <![CDATA[
+	SELECT
+		m.consume_date as consumeDate,
+		count(*) AS totalCount,
+		sum(m.amount) AS totalAmount,
+		sum(m.amount) / count(*) AS averageAmount
+	FROM
+		(
+			SELECT
+				s.student_no,
+				s.consume_date,
+				sum(s.breakfast_amount) + sum(s.lunch_amount) + sum(s.dinner_amount) + sum(s.supper_amount) AS amount
+			FROM
+				statis_student_consume s
+            WHERE
+            	s.consume_date <= #{maxDate}
+	            and s.consume_date >= date_format(date_sub(concat(#{maxDate}, '-01'), interval 11 month), '%Y-%m')
+			GROUP BY
+				s.student_no,
+				s.consume_date
+            HAVING amount > 0		
+		) m
+	GROUP BY
+		m.consume_date
+	ORDER BY
+		m.consume_date
+	]]> 	
+  </select>  
+  
+  <!-- 查询男生每月平均三餐消费金额 -->
+  <select id="listMaleAverageDietDataMonth" resultType="java.util.Map" parameterType="String">
+    <![CDATA[
+	SELECT
+		m.consume_date as consumeDate,
+		count(*) AS totalCount,
+		SUM(m.amount) AS totalAmount,
+		SUM(m.amount) / count(*) AS averageAmount
+	FROM
+		(
+			SELECT
+				s.student_number,
+				s.consume_date,
+				sum(s.breakfast_amount) + sum(s.lunch_amount) + SUM(s.dinner_amount) + SUM(s.supper_amount) AS amount
+			FROM
+				student_consume_info s
+			WHERE
+			    s.gender = '男'
+			AND s.consume_date <= #{maxDate}
+	        AND s.consume_date >= date_format(date_sub(concat(#{maxDate}, '-01'), interval 11 month), '%Y-%m')
+			GROUP BY
+				s.student_number,
+				s.consume_date
+			HAVING amount > 0	
+		) m
+	GROUP BY
+		m.consume_date
+	ORDER BY
+		m.consume_date
+ 	]]>   
+  </select>
+
+  <!-- 查询女生每月平均三餐消费金额 -->
+  <select id="listFemaleAverageDietDataMonth" resultType="java.util.Map" parameterType="String">
+   <![CDATA[
+	SELECT
+		m.consume_date as consumeDate,
+		count(*) AS totalCount,
+		SUM(m.amount) AS totalAmount,
+		SUM(m.amount) / count(*) AS averageAmount
+	FROM
+		(
+			SELECT
+				s.student_number,
+				s.consume_date,
+				sum(s.breakfast_amount) + sum(s.lunch_amount) + sum(s.dinner_amount) + sum(s.supper_amount) AS amount
+			FROM
+				student_consume_info s
+			WHERE
+			    s.gender = '女'
+			AND s.consume_date <= #{maxDate}
+	        AND s.consume_date >= date_format(date_sub(concat(#{maxDate}, '-01'), interval 11 month), '%Y-%m')
+			GROUP BY
+				s.student_number,
+				s.consume_date
+			HAVING amount > 0
+		) m
+	GROUP BY
+		m.consume_date
+	ORDER BY
+		m.consume_date
+	 ]]>  	
+  </select>
+  
+  <!-- 查询某学生每月平均三餐消费金额 -->
+  <select id="listStudentAverageDietDataMonth" resultType="java.util.Map" parameterType="String">
+    <![CDATA[
+	SELECT
+		s.consume_date as consumeDate,
+		sum(s.breakfast_amount) + sum(s.lunch_amount) + SUM(s.dinner_amount) + SUM(s.supper_amount) AS averageAmount
+	FROM
+		student_consume_info s
+	WHERE
+		s.student_number = #{studentNumber}
+    AND s.consume_date <= #{maxDate}
+	AND s.consume_date >= date_format(date_sub(concat(#{maxDate}, '-01'), interval 11 month), '%Y-%m')
+	GROUP BY
+		s.consume_date
+	ORDER BY
+		s.consume_date
+    ]]>  	
+  </select>
+  
+  <!-- 查询消费月份信息 -->
+  <select id="listSchoolConsumeMonthList" resultType="java.util.Map">
+   <![CDATA[
+	select MAX(s.consume_date) as maxDate,
+	       MIN(s.consume_date) as minDate
+	  FROM student_consume_info s,
+	      (select MAX(CONCAT(consume_date, '-01')) as maxDate from student_consume_info) n
+	 WHERE 
+	      (s.breakfast_amount + s.lunch_amount + s.dinner_amount + s.supper_amount + s.fruit_amount +
+	       s.bath_amount + s.book_amount + s.hospital_amount + s.market_amount + s.internet_amount + s.other_amount ) > 0
+	      and s.consume_date <= n.maxDate
+		  and s.consume_date >= date_format(date_sub(n.maxDate, interval 11 month), '%Y-%m')
+	]]> 	  
+  </select>
+  
+   <!-- 查询全校学生每月平均消费金额  -->
+  <select id="listSchoolAverageConsumeDataMonth" resultType="java.util.Map" parameterType="String">
+    <![CDATA[
+	SELECT
+		m.consume_date as consumeDate,
+		count(*) AS totalCount,
+		sum(m.amount) AS totalAmount,
+		sum(m.amount) / count(*) AS averageAmount
+	FROM
+		(
+			SELECT
+				s.student_number,
+				s.consume_date,
+				sum(s.breakfast_amount) + sum(s.lunch_amount) + sum(s.dinner_amount) + sum(s.supper_amount) + sum(s.fruit_amount) +
+				sum(s.bath_amount) + sum(s.book_amount) + sum(s.hospital_amount) + sum(s.market_amount) + sum(s.internet_amount) + sum(s.other_amount) AS amount
+			FROM
+				student_consume_info s
+			WHERE
+			    s.consume_date <= #{maxDate}
+	            and s.consume_date >= date_format(date_sub(concat(#{maxDate}, '-01'), interval 11 month), '%Y-%m')
+			GROUP BY
+				s.student_number,
+				s.consume_date
+            HAVING amount > 0		
+		) m
+	GROUP BY
+		m.consume_date
+	ORDER BY
+		m.consume_date
+	]]> 
+  </select>  
+  
+  <!-- 查询男生每月平均消费金额 -->
+  <select id="listMaleAverageConsumeDataMonth" resultType="java.util.Map" parameterType="String">
+   <![CDATA[
+	SELECT
+		m.consume_date as consumeDate,
+		count(*) AS totalCount,
+		SUM(m.amount) AS totalAmount,
+		SUM(m.amount) / count(*) AS averageAmount
+	FROM
+		(
+			SELECT
+				s.student_number,
+				s.consume_date,
+				sum(s.breakfast_amount) + sum(s.lunch_amount) + sum(s.dinner_amount) + sum(s.supper_amount) +  sum(s.fruit_amount) +
+				sum(s.bath_amount) + sum(s.book_amount) + sum(s.hospital_amount) + sum(s.market_amount) + sum(s.internet_amount) + sum(s.other_amount) AS amount
+			FROM
+				student_consume_info s
+			WHERE
+			    s.consume_date <= #{maxDate}
+	        AND s.consume_date >= date_format(date_sub(concat(#{maxDate}, '-01'), interval 11 month), '%Y-%m')
+			AND s.gender = '男'		
+			GROUP BY
+				s.student_number,
+				s.consume_date
+			HAVING amount > 0	
+		) m
+	GROUP BY
+		m.consume_date
+	ORDER BY
+		m.consume_date
+	]]> 
+  </select>
+
+  <!-- 查询女生每月平均消费金额 -->
+  <select id="listFemaleAverageConsumeDataMonth" resultType="java.util.Map" parameterType="String">
+   <![CDATA[
+	SELECT
+		m.consume_date as consumeDate,
+		count(*) AS totalCount,
+		SUM(m.amount) AS totalAmount,
+		SUM(m.amount) / count(*) AS averageAmount
+	FROM
+		(
+			SELECT
+				s.student_number,
+				s.consume_date,
+				sum(s.breakfast_amount) + sum(s.lunch_amount) + sum(s.dinner_amount) + sum(s.supper_amount) +  sum(s.fruit_amount) +
+				sum(s.bath_amount) + sum(s.book_amount) + sum(s.hospital_amount) + sum(s.market_amount) + sum(s.internet_amount) + sum(s.other_amount) AS amount
+			FROM
+				student_consume_info s
+			WHERE
+			    s.consume_date <= #{maxDate}
+	        AND s.consume_date >= date_format(date_sub(concat(#{maxDate}, '-01'), interval 11 month), '%Y-%m')
+	        AND s.gender = '女'
+			GROUP BY
+				s.student_number,
+				s.consume_date
+			HAVING amount > 0
+		) m
+	GROUP BY
+		m.consume_date
+	ORDER BY
+		m.consume_date
+	]]> 
+  </select>
+  
+  <!-- 查询某学生每月平均消费金额 -->
+  <select id="listStudentAverageConsumeDataMonth" resultType="java.util.Map" parameterType="String">
+   <![CDATA[
+	SELECT
+		s.consume_date as consumeDate,
+		sum(s.breakfast_amount) + sum(s.lunch_amount) + sum(s.dinner_amount) + sum(s.supper_amount) + sum(s.fruit_amount) + sum(s.bath_amount) + 
+	    sum(s.book_amount) + sum(s.hospital_amount) + sum(s.market_amount) + sum(s.internet_amount) + sum(s.other_amount) AS averageAmount
+	FROM
+		student_consume_info s
+	WHERE
+		s.student_number = ${studentNumber}
+	AND s.consume_date <= #{maxDate}
+	AND s.consume_date >= date_format(date_sub(concat(#{maxDate}, '-01'), interval 11 month), '%Y-%m')
+	GROUP BY
+		s.consume_date
+	ORDER BY
+		s.consume_date
+	]]> 
+  </select>
+  
+  <!-- 查询某学生最近三个月的消费信息 -->
+  <select id="listStudentLatestThreeMonthConsumeInfo" resultType="com.sunmnet.bigdata.web.model.entity.student.StudentConsumeInfo" parameterType="String">
+		SELECT
+		student_no, consume_date, student_name, gender, breakfast_amount,
+    breakfast_times, lunch_amount, lunch_times, dinner_amount, dinner_times, supper_amount,
+    supper_times, fruit_amount, fruit_times, internet_amount, market_amount, bath_amount,
+    book_amount, hospital_amount, other_amount
+		  FROM student_consume_info s
+		 WHERE s.student_number = ${studentNumber}
+	  ORDER BY s.consume_date DESC
+		LIMIT 0,3
+  </select>
+  
+  <!-- 查询某学生平均每餐饭消费金额 -->
+  <select id="listStudentAverageDietDataMeal" resultType="java.util.Map" parameterType="String">
+   <![CDATA[
+	SELECT
+		round(sum(s.breakfast_amount) / (sum(s.breakfast_count) * 100),2) AS breakfastAmount,
+		round(sum(s.lunch_amount) / (sum(s.lunch_count) * 100),2) AS lunchAmount,
+		round(sum(s.dinner_amount) / (sum(s.dinner_count) *100),2) AS dinnerAmount
+	FROM
+		student_consume_info s
+	WHERE
+		s.student_number = ${studentNumber}
+	AND s.consume_date <= #{maxDate}
+	AND s.consume_date >= date_format(date_sub(concat(#{maxDate}, '-01'), interval 11 month), '%Y-%m')
+   ]]>
+   </select>
+   
+   <!-- 查询全校学生平均每餐消费金额 -->
+   <select id="listSchoolAverageDietDataMeal" resultType="java.util.Map" parameterType="String">
+    <![CDATA[
+ 	SELECT
+		round(sum(s.breakfast_amount) / (sum(s.breakfast_count) * 100),2) AS breakfastAmount,
+		round(sum(s.lunch_amount) / (sum(s.lunch_count) * 100),2) AS lunchAmount,
+		round(sum(s.dinner_amount) / (sum(s.dinner_count) *100),2) AS dinnerAmount
+	FROM
+		student_consume_info s
+	WHERE
+	    s.consume_date <= #{maxDate}
+	AND s.consume_date >= date_format(date_sub(concat(#{maxDate}, '-01'), interval 11 month), '%Y-%m')
+	]]>
+   </select>
+   
+   <!-- 查询贫困学生平均每餐消费金额 -->
+   <select id="listNeedyAverageDietDataMeal" resultType="java.util.Map" parameterType="String">
+   <![CDATA[
+   SELECT
+		round(sum(s.breakfast_amount) / (sum(s.breakfast_count) * 100),2) AS breakfastAmount,
+		round(sum(s.lunch_amount) / (sum(s.lunch_count) * 100),2) AS lunchAmount,
+		round(sum(s.dinner_amount) / (sum(s.dinner_count) *100),2) AS dinnerAmount
+	 FROM
+		student_consume_info s,
+		(select DISTINCT student_number from student_support_info) c
+	WHERE
+		c.student_number = s.student_number
+	AND s.consume_date <= #{maxDate}
+	AND s.consume_date >= date_format(date_sub(concat(#{maxDate}, '-01'), interval 11 month), '%Y-%m')
+	]]>
+   </select>
+   
+   <!-- 查询非贫困学生平均每餐消费金额 -->
+   <select id="listGeneralAverageDietDataMeal" resultType="java.util.Map" parameterType="String">
+    <![CDATA[
+    SELECT
+		round(sum(s.breakfast_amount) / (sum(s.breakfast_count) * 100),2) AS breakfastAmount,
+		round(sum(s.lunch_amount) / (sum(s.lunch_count) * 100),2) AS lunchAmount,
+		round(sum(s.dinner_amount) / (sum(s.dinner_count) *100),2) AS dinnerAmount
+	FROM
+		student_consume_info s,
+		(select si.* from student_info si where NOT EXISTS (SELECT * from student_support_info su where su.student_number = si.student_number)) c
+	WHERE
+		c.student_number = s.student_number
+	AND s.consume_date <= #{maxDate}
+	AND s.consume_date >= date_format(date_sub(concat(#{maxDate}, '-01'), interval 11 month), '%Y-%m')
+	]]>	
+   </select>
+  
+  <!-- 查询贫困生月平均消费金额 -->
+  <select id="listNeedyAverageConsumeDataMonth" resultType="java.util.Map" parameterType="String">
+   <![CDATA[
+	SELECT
+	    m.consume_date as consumeDate,
+		count(*) AS totalCount,
+		sum(m.amount) AS totalAmount,
+		sum(m.amount) / count(*) AS averageAmount
+	FROM
+		(
+			SELECT
+				s.student_number,
+				s.consume_date,
+				sum(s.breakfast_amount) + sum(s.lunch_amount) + sum(s.dinner_amount) + sum(s.supper_amount) + sum(s.fruit_amount) +
+				sum(s.bath_amount) + sum(s.book_amount) + sum(s.hospital_amount) + sum(s.market_amount) + sum(s.internet_amount) + sum(s.other_amount) AS amount
+			FROM
+				student_consume_info s,
+				(select DISTINCT student_number from student_support_info) c
+			WHERE
+				c.student_number = s.student_number
+		    AND s.consume_date <= #{maxDate}
+	        AND s.consume_date >= date_format(date_sub(concat(#{maxDate}, '-01'), interval 11 month), '%Y-%m')			
+			GROUP BY
+				s.student_number,
+				s.consume_date
+			HAVING
+				amount > 0
+		) m
+	GROUP BY
+		m.consume_date
+	ORDER BY
+		m.consume_date
+	]]>
+  </select>
+  
+  <!-- 查询非贫困生月平均消费金额 -->
+  <select id="listGeneralAverageConsumeDataMonth" resultType="java.util.Map" parameterType="String">
+   <![CDATA[
+	SELECT
+	    m.consume_date as consumeDate,
+		count(*) AS totalCount,
+		sum(m.amount) AS totalAmount,
+		sum(m.amount) / count(*) AS averageAmount
+	FROM
+		(
+			SELECT
+				s.student_number,
+				s.consume_date,
+				sum(s.breakfast_amount) + sum(s.lunch_amount) + sum(s.dinner_amount) + sum(s.supper_amount) + sum(s.fruit_amount) + 
+				sum(s.bath_amount) + sum(s.book_amount) + sum(s.hospital_amount) + sum(s.market_amount) + sum(s.internet_amount) + sum(s.other_amount) AS amount								
+			FROM
+				student_consume_info s,
+				(select si.* from student_info si where NOT EXISTS (SELECT * from student_support_info su where su.student_number = si.student_number)) c
+			WHERE
+				c.student_number = s.student_number
+		    AND s.consume_date <= #{maxDate}
+	        AND s.consume_date >= date_format(date_sub(concat(#{maxDate}, '-01'), interval 11 month), '%Y-%m')		
+			GROUP BY
+				s.student_number,
+				s.consume_date
+			HAVING
+				amount > 0
+		) m
+	GROUP BY
+		m.consume_date
+	ORDER BY
+		m.consume_date
+	]]>
+  </select>
+
+  <!-- 查询贫困生平均每月三餐次数 -->  
+  <select id="listNeedyAverageDietTimesMonth" resultType="java.util.Map" parameterType="String">
+   <![CDATA[
+	SELECT
+	    m.consume_date as consumeDate,
+		round(sum(m.count) / count(*), 0) AS averageCount
+	FROM
+		(
+			SELECT
+				s.student_number,
+				s.consume_date,
+				sum(s.breakfast_count) + sum(s.lunch_count) + sum(s.dinner_count)  AS count
+			FROM
+				student_consume_info s,
+				(select DISTINCT student_number from student_support_info) c
+			WHERE
+				c.student_number = s.student_number
+		    AND s.consume_date <= #{maxDate}
+	        AND s.consume_date >= date_format(date_sub(concat(#{maxDate}, '-01'), interval 11 month), '%Y-%m')		
+			GROUP BY
+				s.student_number,
+				s.consume_date
+			HAVING
+		        (count > 35 and substring(s.consume_date,6,2) != '01' and substring(s.consume_date,6,2) !='02' and substring(s.consume_date,6,2) !='07' and substring(s.consume_date,6,2) !='08')
+                or (count > 0 and (substring(s.consume_date,6,2) = '01' or substring(s.consume_date,6,2) ='02' or substring(s.consume_date,6,2) ='07' or substring(s.consume_date,6,2) ='08'))   
+		) m
+	GROUP BY
+		m.consume_date
+	ORDER BY
+		m.consume_date
+	]]>
+  </select>
+  
+  <!-- 查询非贫困生平均每月三餐次数 -->  
+  <select id="listGeneralAverageDietTimesMonth" resultType="java.util.Map" parameterType="String">
+   <![CDATA[
+	SELECT
+	     m.consume_date as consumeDate,
+		round(sum(m.count) / count(*), 0) AS averageCount
+	FROM
+		(
+			SELECT
+				s.student_number,
+				s.consume_date,
+				sum(s.breakfast_count) + sum(s.lunch_count) + sum(s.dinner_count)  AS count
+			FROM
+				student_consume_info s,
+				(select si.* from student_info si where NOT EXISTS (SELECT * from student_support_info su where su.student_number = si.student_number)) c
+			WHERE
+				c.student_number = s.student_number
+		    AND s.consume_date <= #{maxDate}
+	        AND s.consume_date >= date_format(date_sub(concat(#{maxDate}, '-01'), interval 11 month), '%Y-%m')		
+			GROUP BY
+				s.student_number,
+				s.consume_date
+			HAVING
+		       (count > 35 and substring(s.consume_date,6,2) != '01' and substring(s.consume_date,6,2) !='02' and substring(s.consume_date,6,2) !='07' and substring(s.consume_date,6,2) !='08')
+                or (count > 0 and (substring(s.consume_date,6,2) = '01' or substring(s.consume_date,6,2) ='02' or substring(s.consume_date,6,2) ='07' or substring(s.consume_date,6,2) ='08'))   
+		) m
+	GROUP BY
+		m.consume_date
+	ORDER BY
+		m.consume_date
+	]]>
+  </select>
+  
+  <!-- 查询早餐和夜宵次数 -->
+  <select id="listStudentBreakfastAndSupperTimes" resultType="java.util.Map" parameterType="String">
+   <![CDATA[
+  	SELECT
+		s.consume_date as consumeDate,
+		sum(breakfast_count) as breakfastCount,
+		sum(supper_count) as supperCount
+	FROM
+		student_consume_info s
+	WHERE
+		s.student_number = #{studentNumber}
+    AND s.consume_date <= #{maxDate}
+	AND s.consume_date >= date_format(date_sub(concat(#{maxDate}, '-01'), interval 11 month), '%Y-%m')
+ GROUP BY
+	s.consume_date
+	]]>
+  </select>
+  
+  <!-- 查询学生指定月消费金额 -->
+  <select id="getStudentConsumeDataByStudentNoAndConsumeDate" resultType="java.math.BigDecimal" parameterType="String">
+	  	SELECT
+			s.breakfast_amount + s.lunch_amount + s.dinner_amount + s.supper_amount +  s.fruit_amount +
+			s.bath_amount + s.book_amount + s.hospital_amount + s.market_amount + s.internet_amount + s.other_amount AS amount
+		FROM
+			student_consume_info s
+		WHERE
+			s.student_number = #{studentNumber}
+	    AND s.consume_date = #{consumeDate}
+  </select>
+  
+    <!-- 查询指定月消费总记录数 -->
+  <select id="countAllConsumeTimesByConsumeDate" resultType="int" parameterType="String">
+	  	SELECT
+			count(*)
+		FROM
+			student_consume_info s
+		WHERE
+	       s.consume_date = #{consumeDate}
+  </select>
+  
+  <!-- 根据行号查询指定月消费金额 -->
+  <select id="getConsumeDataByLineNoAndConsumeDate" resultType="java.math.BigDecimal" parameterType="String">
+	  	SELECT
+			s.breakfast_amount + s.lunch_amount + s.dinner_amount + s.supper_amount +  s.fruit_amount +
+			s.bath_amount + s.book_amount + s.hospital_amount + s.market_amount + s.internet_amount + s.other_amount AS amount
+		FROM
+			student_consume_info s
+		WHERE
+	    	 s.consume_date = #{consumeDate}
+	 ORDER BY amount asc
+	    limit ${lineNumber}, 1
+  </select>
+  
+  <!-- 根据条件查询平均每月消费金额综合画像) -->
+  <select id="listAverageConsumeDateMonthByCondition" resultType="java.util.Map" parameterType="com.sunmnet.bigdata.web.model.request.student.WholePortraitREQ">
+	SELECT
+	    m.consume_date as consumeDate,
+		SUM(m.amount) / count(*) / 100 AS averageAmount
+	FROM
+	    (SELECT
+			sc.student_number,
+			sc.consume_date,  
+			sum(sc.breakfast_amount) + sum(sc.lunch_amount) + sum(sc.dinner_amount) + sum(sc.supper_amount) + sum(sc.fruit_amount) +
+			sum(sc.bath_amount) + sum(sc.book_amount) + sum(sc.hospital_amount) + sum(sc.market_amount) + sum(sc.internet_amount) + sum(sc.other_amount) AS amount
+		FROM
+			student_consume_info sc,
+			student_info si
+		WHERE 
+		    sc.student_number = si.student_number
+		 <if test="academyName != null and academyName != ''" >
+            and si.academy_name = #{academyName}
+         </if>
+		 <if test="collegeCode != null and collegeCode != ''" >
+            and si.college_code = #{collegeCode}
+         </if>
+         <if test="majorCode != null and majorCode != ''" >
+            and si.major_code = #{majorCode}
+         </if>
+         <if test="className != null and className != ''" >
+           and si.class_name = #{className}
+         </if>
+         <if test="nation != null and nation != ''" >
+            and si.nation = #{nation}
+         </if>
+         <if test="gender != null and gender != ''" >
+            and sc.gender = #{gender}
+         </if>
+         <if test="studentPlace != null and studentPlace != ''" >
+            and si.student_place = #{studentPlace}
+         </if>
+         <if test="startDate != null and startDate != ''" >
+          	 <![CDATA[ and sc.consume_date >= #{startDate} ]]>
+         </if>
+         <if test="endDate != null and endDate != ''" >
+          	 <![CDATA[ and sc.consume_date <= #{endDate} ]]>
+         </if>
+		GROUP BY
+		    sc.student_number,
+			sc.consume_date
+        HAVING amount > 0
+		) m
+	GROUP BY
+		m.consume_date
+	ORDER BY
+		m.consume_date
+  </select>
+  
+  <!-- 根据条件查询每月平均三餐次数(综合画像) -->
+  <select id="countAverageDietTimesMonthByCondition" resultType="java.util.Map" parameterType="com.sunmnet.bigdata.web.model.request.student.WholePortraitREQ">
+	SELECT
+	    m.consume_date as consumeDate,
+		SUM(m.breakfast_count) / count(*) AS breakfastCount,
+		SUM(m.lunch_count) / count(*) AS lunchCount,
+		SUM(m.dinner_count) / count(*) AS dinnerCount
+	FROM
+	    (SELECT
+			sc.student_number,
+			sc.consume_date,
+			sum(sc.breakfast_count) as breakfast_count,
+			sum(sc.lunch_count) as lunch_count,
+			sum(sc.dinner_count) as dinner_count
+		FROM
+			student_consume_info sc,
+			student_info si
+		WHERE 
+		    sc.student_number = si.student_number
+		 <if test="academyName != null and academyName != ''" >
+            and si.academy_name = #{academyName}
+         </if>
+		 <if test="collegeCode != null and collegeCode != ''" >
+            and si.college_code = #{collegeCode}
+         </if>
+         <if test="majorCode != null and majorCode != ''" >
+            and si.major_code = #{majorCode}
+         </if>
+         <if test="className != null and className != ''" >
+            and si.class_name = #{className}
+         </if>
+         <if test="nation != null and nation != ''" >
+            and si.nation = #{nation}
+         </if>
+         <if test="gender != null and gender != ''" >
+            and sc.gender = #{gender}
+         </if>
+         <if test="studentPlace != null and studentPlace != ''" >
+            and si.student_place = #{studentPlace}
+         </if>
+         <if test="startDate != null and startDate != ''" >
+          	 <![CDATA[ and sc.consume_date >= #{startDate} ]]>
+         </if>
+         <if test="endDate != null and endDate != ''" >
+          	 <![CDATA[ and sc.consume_date <= #{endDate} ]]>
+         </if>
+		GROUP BY
+		    sc.student_number,
+			sc.consume_date
+		) m
+	GROUP BY
+		m.consume_date
+	ORDER BY
+        m.consume_date
+  </select>
+  
+</mapper>

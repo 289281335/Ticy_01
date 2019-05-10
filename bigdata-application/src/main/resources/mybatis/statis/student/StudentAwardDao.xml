@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+<mapper namespace="com.sunmnet.bigdata.web.dao.student.IStudentAwardDAO">
+<!--
+save
+update
+findOne
+findOneByProperty
+findOneByCondition
+delete
+deleteByCondition
+deleteByProperty
+findAll
+queryPage
+count
+-->
+
+  <select id="listAwardByStudentNoAndCategory" resultType="com.sunmnet.bigdata.web.model.response.student.StudentAwardRES" parameterType="String" >
+    select
+      award_category as awardCategory ,
+      count(award_category) as awardCount
+    from student_award
+    where student_no = #{studentNo,jdbcType=VARCHAR}
+    group by (SELECT COUNT(award_category) FROM student_award)
+  </select>
+
+  <select id="listAwardByStudentNo" resultType="com.sunmnet.bigdata.web.model.entity.student.StudentAward" parameterType="String" >
+    SELECT
+    id as id ,
+  student_no as studentNo ,
+  student_name as studentName ,
+  award_category as awardCategory ,
+  award_level as awardLevel ,
+  award_time as awardTime ,
+  status as status ,
+  audit_advice as auditAdvice ,
+  major_code as majorCode ,
+  major_name as majorName
+    From student_award
+    WHERE student_no = #{studentNo,jdbcType=VARCHAR}
+    order by award_time
+  </select>
+</mapper>
+

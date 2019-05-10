@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+<mapper namespace="com.sunmnet.bigdata.web.dao.IAlarmStudentLostDAO">
+<!--
+save
+update
+findOne
+findOneByProperty
+findOneByCondition
+delete
+deleteByCondition
+deleteByProperty
+findAll
+queryPage
+count
+-->
+
+
+
+<sql id="Base_Column_List">
+  student_no as studentNo ,
+  last_date as lastDate ,
+  update_date as updateDate ,
+  warning_date as warningDate ,
+  lost_reason as lostReason ,
+  remark as remark ,
+  deal_flag as dealFlag ,
+  deal_date as dealDate 
+</sql>
+<!--更新失联预警标识-->
+  <update id="updateLostWarning" parameterType="String">
+  update alarm_student_lost set deal_flag = '1',deal_date = now(), lost_reason=#{reason}, remark=#{remark} where student_no = #{studentNo} and warning_date = #{warningDate}
+  </update>
+</mapper>
+

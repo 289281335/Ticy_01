@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.sunmnet.bigdata.web.dao.student.IStudentNetTimeInfoDAO" >
+  
+  <select id="nearlyNdayNetInfo" resultType="com.sunmnet.bigdata.web.model.response.student.StudentNetTimeInfoRES" parameterType="map" >
+		SELECT student_no,time,status FROM student_surf_internet  where
+		student_no = #{studentNo}  and time >= DATE_SUB(CURDATE(),INTERVAL #{days} DAY)
+  </select>
+  
+  <select id="listStudentNoByCondition" resultType="String" parameterType="map" >
+  		select student_no from student_info student where status = 1
+		<if test="collegeCode != null">
+	      and student.college_code=#{collegeCode}
+	    </if>
+	    <if test="majorCode != null">
+	      and student.major_code=#{majorCode}
+	    </if>
+	    <if test="className != null">
+	      and student.class_name=#{className}
+	    </if>
+	    <if test="nation != null">
+	      and student.nation=#{nation}
+	    </if>
+	    <if test="gender != null">
+	      and student.gender=#{gender}
+	    </if>
+	    <if test="nativePlace != null">
+	      and student.native_place=#{nativePlace}
+	    </if>
+	    <if test="schoolYear != null">
+	      and student.school_year=#{schoolYear}
+	    </if>
+	    <if test="academy_name != null">
+		  and student.academy_name=#{academy_name}
+		</if>
+  </select>
+  
+</mapper>

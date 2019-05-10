@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+<mapper namespace="com.sunmnet.bigdata.web.dao.student.IStudentPositionDAO">
+<!--
+save
+update
+findOne
+findOneByProperty
+findOneByCondition
+delete
+deleteByCondition
+deleteByProperty
+findAll
+queryPage
+count
+-->
+
+  <!-- 查询学生信息 -->
+  <select id="listPosition" resultType="StudentPosition" parameterType="String" >
+    select
+      id as id ,
+  student_no as studentNo ,
+  student_name as studentName ,
+  major_name as majorName ,
+  start_time as startTime ,
+  end_time as endTime ,
+  orgnization as orgnization ,
+  position_type as positionType ,
+  pozition as pozition ,
+  status as status
+    from student_position
+    where student_no = #{studentNo}
+  </select>
+</mapper>
+

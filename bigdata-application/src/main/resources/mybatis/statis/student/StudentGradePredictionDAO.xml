@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.sunmnet.bigdata.web.dao.student.IStudentGradePredictionDAO" >
+  <!-- 根据学号查出该生某学年的每科成绩 -->
+  
+	<select id="gradePrediction" resultType="Map" parameterType="java.lang.String">
+			SELECT DISTINCT
+				a.student_no as studentNo,
+				a.subject as subject,
+				a.predict_scores as predictScores,
+				b.credits as credits,
+				b.semester AS semester,
+				b.average_scores AS averageScores
+			FROM
+				predict_student_subjects a
+				LEFT JOIN statis_student_scores b ON a.subject = b.examination_course_name
+			WHERE
+				a.student_no = #{studentNo} and a.predict_scores > 0
+			GROUP BY
+				a.student_no,
+				a.subject,
+				a.predict_scores,
+				b.credits,
+				b.semester,
+				b.average_scores
+		</select>
+		
+		
+		<!-- 查询预测挂科数量 -->
+		<select id="selectFailCourseCount" resultType="java.lang.Integer" parameterType="java.lang.String">
+			SELECT
+				count( * ) 
+			FROM
+				(
+			SELECT DISTINCT
+				t.student_no,
+				t.subject,
+				t.predict_scores,
+				max( t.credits ) AS credits,
+				max( t.semester ) AS semester,
+				max( t.average_scores ) AS averageScores
+			FROM
+				(
+			SELECT
+				a.student_no,
+				a.subject,
+				a.predict_scores,
+				b.examination_course_name,
+				b.credits,
+				b.semester,
+				b.average_scores
+			FROM
+				predict_student_subjects a
+				LEFT JOIN statis_student_scores b ON a.subject = b.examination_course_name
+			WHERE
+				a.student_no = #{studentNo}
+			GROUP BY
+				a.student_no,
+				a.subject,
+				a.predict_scores,
+				b.examination_course_name,
+				b.credits,
+				b.semester,
+				b.average_scores
+				) t 
+			GROUP BY
+				t.student_no,
+				t.subject,
+				t.predict_scores
+				) w 
+			WHERE
+				w.predict_scores BETWEEN 0
+				AND 68
+		</select>
+</mapper>

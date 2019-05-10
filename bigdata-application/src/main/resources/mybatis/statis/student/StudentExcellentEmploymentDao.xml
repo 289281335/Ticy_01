@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+<mapper namespace="com.sunmnet.bigdata.web.dao.student.IStudentExcellentEmploymentDAO">
+<!--
+save
+update
+findOne
+findOneByProperty
+findOneByCondition
+delete
+deleteByCondition
+deleteByProperty
+findAll
+queryPage
+count
+-->
+
+
+
+<sql id="Base_Column_List">
+  id as id ,
+  student_no as studentNo ,
+  academy_name as academyName ,
+  college_name as collegeName ,
+  major_name as majorName ,
+  student_name as studentName ,
+  length_schooling as lengthSchooling ,
+  gender as gender ,
+  nation as nation ,
+  political_outlook as politicalOutlook ,
+  student_place as studentPlace ,
+  enterprise_ownership as enterpriseOwnership ,
+  unit_name as unitName ,
+  unit_address as unitAddress ,
+  enterprise_type as enterpriseType ,
+  unit_properties as unitProperties ,
+  unit_industry as unitIndustry ,
+  grade as grade ,
+  create_time as createTime ,
+  modify_time as modifyTime 
+</sql>
+
+</mapper>
+

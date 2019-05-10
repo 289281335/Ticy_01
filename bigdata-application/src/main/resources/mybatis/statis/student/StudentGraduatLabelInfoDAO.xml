@@ -1,0 +1,313 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.sunmnet.bigdata.web.dao.student.IStudentGraduatLabelInfoDAO" >
+
+    <select id="selectByPrimaryKey" resultType="com.sunmnet.bigdata.web.model.entity.student.StudentGraduatLabelInfo" parameterType="java.lang.Long" >
+        select 
+         id, student_no, study_level, achievement_status, class_discipline, fail_num,
+        internet_addiction, internet_time,internet_health, consumption_amount, consumption_characteristic,
+        engel_coefficient, poor_students, three_meals_regularity, three_meals_taste, breakfast_situation,
+        supper_situation, overall_situation, friends_universality, dormitory_relationship,
+        super_scholar_friends, work_rest_regularity, sleep_situation, sleep_time, out_situation,
+        create_time, modify_time
+        from graduate_label_info
+        where id = #{id,jdbcType=BIGINT}
+    </select>
+
+    <!--查询没有数据为第一次跑，跑今年前三年的，有数据只跑当年数据-->
+	<select id="getGraduatLabelInfoTotal" resultType="java.lang.Long" parameterType="java.lang.Long"  >
+        select count(0) from graduate_label_info
+    </select>
+
+	<!--查询毕业生的标签信息（根据学号）-->
+	<select id="getByStudentNo" resultType="com.sunmnet.bigdata.web.model.entity.student.StudentGraduatLabelInfo" parameterType="java.lang.String" >
+        select 
+         id, student_no, study_level, achievement_status, class_discipline, fail_num,
+        internet_addiction, internet_time,internet_health, consumption_amount, consumption_characteristic,
+        engel_coefficient, poor_students, three_meals_regularity, three_meals_taste, breakfast_situation,
+        supper_situation, overall_situation, friends_universality, dormitory_relationship,
+        super_scholar_friends, work_rest_regularity, sleep_situation, sleep_time, out_situation,
+        create_time, modify_time
+        from graduate_label_info
+        where student_no = #{studentNo,jdbcType=VARCHAR}
+    </select>
+
+
+ 	<!--查询毕业生的标签信息-->
+ 	<select id="getGraduatLabelInfo" resultType="com.sunmnet.bigdata.web.model.entity.student.StudentGraduatLabelInfo" parameterType="list" >
+        select
+        id, student_no, study_level, achievement_status, class_discipline, fail_num,
+        internet_addiction, internet_time,internet_health, consumption_amount, consumption_characteristic,
+        engel_coefficient, poor_students, three_meals_regularity, three_meals_taste, breakfast_situation,
+        supper_situation, overall_situation, friends_universality, dormitory_relationship,
+        super_scholar_friends, work_rest_regularity, sleep_situation, sleep_time, out_situation,
+        create_time, modify_time
+        from graduate_label_info
+        	where  student_no in
+				<foreach item="item" index="index" collection="list" open="(" separator="," close=")">  
+				#{item}  
+				</foreach>
+    </select>
+
+
+    <insert id="insertSelective" parameterType="com.sunmnet.bigdata.web.model.entity.student.StudentGraduatLabelInfo" >
+        insert into graduate_label_info
+        <trim prefix="(" suffix=")" suffixOverrides="," >
+            <if test="id != null" >
+                id,
+            </if>
+            <if test="studentNo != null" >
+                student_no,
+            </if>
+            <if test="studyLevel != null" >
+                study_level,
+            </if>
+            <if test="achievementStatus != null" >
+                achievement_status,
+            </if>
+            <if test="classDiscipline != null" >
+                class_discipline,
+            </if>
+            <if test="failNum != null" >
+                fail_num,
+            </if>
+            <if test="internetAddiction != null" >
+                internet_addiction,
+            </if>
+            <if test="internetTime != null" >
+                internet_time,
+            </if>
+            <if test="internetHealth != null" >
+                internet_health,
+            </if>
+            <if test="consumptionAmount != null" >
+                consumption_amount,
+            </if>
+            <if test="consumptionCharacteristic != null" >
+                consumption_characteristic,
+            </if>
+            <if test="engelCoefficient != null" >
+                engel_coefficient,
+            </if>
+            <if test="poorStudents != null" >
+                poor_students,
+            </if>
+            <if test="threeMealsRegularity != null" >
+                three_meals_regularity,
+            </if>
+            <if test="threeMealsTaste != null" >
+                three_meals_taste,
+            </if>
+            <if test="breakfastSituation != null" >
+                breakfast_situation,
+            </if>
+            <if test="supperSituation != null" >
+                supper_situation,
+            </if>
+            <if test="overallSituation != null" >
+                overall_situation,
+            </if>
+            <if test="friendsUniversality != null" >
+                friends_universality,
+            </if>
+            <if test="dormitoryRelationship != null" >
+                dormitory_relationship,
+            </if>
+            <if test="superScholarFriends != null" >
+                super_scholar_friends,
+            </if>
+            <if test="workRestRegularity != null" >
+                work_rest_regularity,
+            </if>
+            <if test="sleepSituation != null" >
+                sleep_situation,
+            </if>
+            <if test="sleepTime != null" >
+                sleep_time,
+            </if>
+            <if test="outSituation != null" >
+                out_situation,
+            </if>
+            <if test="createTime != null" >
+                create_time,
+            </if>
+            <if test="modifyTime != null" >
+                modify_time,
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides="," >
+            <if test="id != null" >
+                #{id,jdbcType=BIGINT},
+            </if>
+            <if test="studentNo != null" >
+                #{studentNo,jdbcType=VARCHAR},
+            </if>
+            <if test="studyLevel != null" >
+                #{studyLevel,jdbcType=VARCHAR},
+            </if>
+            <if test="achievementStatus != null" >
+                #{achievementStatus,jdbcType=VARCHAR},
+            </if>
+            <if test="classDiscipline != null" >
+                #{classDiscipline,jdbcType=VARCHAR},
+            </if>
+            <if test="failNum != null" >
+                #{failNum,jdbcType=VARCHAR},
+            </if>
+            <if test="internetAddiction != null" >
+                #{internetAddiction,jdbcType=VARCHAR},
+            </if>
+            <if test="internetTime != null" >
+                #{internetTime,jdbcType=VARCHAR},
+            </if>
+            <if test="internetHealth != null" >
+                #{internetHealth,jdbcType=VARCHAR},
+            </if>
+            <if test="consumptionAmount != null" >
+                #{consumptionAmount,jdbcType=VARCHAR},
+            </if>
+            <if test="consumptionCharacteristic != null" >
+                #{consumptionCharacteristic,jdbcType=VARCHAR},
+            </if>
+            <if test="engelCoefficient != null" >
+                #{engelCoefficient,jdbcType=VARCHAR},
+            </if>
+            <if test="poorStudents != null" >
+                #{poorStudents,jdbcType=VARCHAR},
+            </if>
+            <if test="threeMealsRegularity != null" >
+                #{threeMealsRegularity,jdbcType=VARCHAR},
+            </if>
+            <if test="threeMealsTaste != null" >
+                #{threeMealsTaste,jdbcType=VARCHAR},
+            </if>
+            <if test="breakfastSituation != null" >
+                #{breakfastSituation,jdbcType=VARCHAR},
+            </if>
+            <if test="supperSituation != null" >
+                #{supperSituation,jdbcType=VARCHAR},
+            </if>
+            <if test="overallSituation != null" >
+                #{overallSituation,jdbcType=VARCHAR},
+            </if>
+            <if test="friendsUniversality != null" >
+                #{friendsUniversality,jdbcType=VARCHAR},
+            </if>
+            <if test="dormitoryRelationship != null" >
+                #{dormitoryRelationship,jdbcType=VARCHAR},
+            </if>
+            <if test="superScholarFriends != null" >
+                #{superScholarFriends,jdbcType=VARCHAR},
+            </if>
+            <if test="workRestRegularity != null" >
+                #{workRestRegularity,jdbcType=VARCHAR},
+            </if>
+            <if test="sleepSituation != null" >
+                #{sleepSituation,jdbcType=VARCHAR},
+            </if>
+            <if test="sleepTime != null" >
+                #{sleepTime,jdbcType=VARCHAR},
+            </if>
+            <if test="outSituation != null" >
+                #{outSituation,jdbcType=VARCHAR},
+            </if>
+            <if test="createTime != null" >
+                #{createTime,jdbcType=VARCHAR},
+            </if>
+            <if test="modifyTime != null" >
+                #{modifyTime,jdbcType=VARCHAR},
+            </if>
+        </trim>
+    </insert>
+
+    <update id="updateByPrimaryKeySelective" parameterType="com.sunmnet.bigdata.web.model.entity.student.StudentGraduatLabelInfo" >
+        update graduate_label_info
+        <set >
+            <if test="studentNo != null" >
+                student_no = #{studentNo,jdbcType=VARCHAR},
+            </if>
+            <if test="studyLevel != null" >
+                study_level = #{studyLevel,jdbcType=VARCHAR},
+            </if>
+            <if test="achievementStatus != null" >
+                achievement_status = #{achievementStatus,jdbcType=VARCHAR},
+            </if>
+            <if test="classDiscipline != null" >
+                class_discipline = #{classDiscipline,jdbcType=VARCHAR},
+            </if>
+            <if test="failNum != null" >
+                fail_num = #{failNum,jdbcType=VARCHAR},
+            </if>
+            <if test="internetAddiction != null" >
+                internet_addiction = #{internetAddiction,jdbcType=VARCHAR},
+            </if>
+            <if test="internetTime != null" >
+                internet_time = #{internetTime,jdbcType=VARCHAR},
+            </if>
+            <if test="internetHealth != null" >
+                internet_health = #{internetHealth,jdbcType=VARCHAR},
+            </if>
+            <if test="consumptionAmount != null" >
+                consumption_amount = #{consumptionAmount,jdbcType=VARCHAR},
+            </if>
+            <if test="consumptionCharacteristic != null" >
+                consumption_characteristic = #{consumptionCharacteristic,jdbcType=VARCHAR},
+            </if>
+            <if test="engelCoefficient != null" >
+                engel_coefficient = #{engelCoefficient,jdbcType=VARCHAR},
+            </if>
+            <if test="poorStudents != null" >
+                poor_students = #{poorStudents,jdbcType=VARCHAR},
+            </if>
+            <if test="threeMealsRegularity != null" >
+                three_meals_regularity = #{threeMealsRegularity,jdbcType=VARCHAR},
+            </if>
+            <if test="threeMealsTaste != null" >
+                three_meals_taste = #{threeMealsTaste,jdbcType=VARCHAR},
+            </if>
+            <if test="breakfastSituation != null" >
+                breakfast_situation = #{breakfastSituation,jdbcType=VARCHAR},
+            </if>
+            <if test="supperSituation != null" >
+                supper_situation = #{supperSituation,jdbcType=VARCHAR},
+            </if>
+            <if test="overallSituation != null" >
+                overall_situation = #{overallSituation,jdbcType=VARCHAR},
+            </if>
+            <if test="friendsUniversality != null" >
+                friends_universality = #{friendsUniversality,jdbcType=VARCHAR},
+            </if>
+            <if test="dormitoryRelationship != null" >
+                dormitory_relationship = #{dormitoryRelationship,jdbcType=VARCHAR},
+            </if>
+            <if test="superScholarFriends != null" >
+                super_scholar_friends = #{superScholarFriends,jdbcType=VARCHAR},
+            </if>
+            <if test="workRestRegularity != null" >
+                work_rest_regularity = #{workRestRegularity,jdbcType=VARCHAR},
+            </if>
+            <if test="sleepSituation != null" >
+                sleep_situation = #{sleepSituation,jdbcType=VARCHAR},
+            </if>
+            <if test="sleepTime != null" >
+                sleep_time = #{sleepTime,jdbcType=VARCHAR},
+            </if>
+            <if test="outSituation != null" >
+                out_situation = #{outSituation,jdbcType=VARCHAR},
+            </if>
+            <if test="createTime != null" >
+                create_time = #{createTime,jdbcType=VARCHAR},
+            </if>
+            <if test="modifyTime != null" >
+                modify_time = #{modifyTime,jdbcType=VARCHAR},
+            </if>
+        </set>
+        where id = #{id,jdbcType=BIGINT}
+    </update>
+
+    <delete id="deleteByPrimaryKey" parameterType="java.lang.Long" >
+        delete from graduate_label_info
+        where id = #{id,jdbcType=BIGINT}
+    </delete>
+
+</mapper>

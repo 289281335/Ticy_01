@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.sunmnet.bigdata.web.dao.student.IStudentClassRecordDAO" >
+  
+  <!-- 根据学号查询上课情况 -->
+  <select id="selectClassRecordByStudentNo" resultType="com.sunmnet.bigdata.web.model.entity.student.StudentClassRecord" parameterType="String" >
+    select 
+    student_no, course_date, school_term, truancy_times, normal_times, late_times,
+    left_times
+    <![CDATA[
+    from statis_student_course
+    where 
+    	course_date >= #{fromDate}
+    and course_date <= #{toDate}
+    and student_no = #{studentNo}
+    ]]>
+  </select>
+  
+  <!-- 按照月份查询学生上课率 -->
+  <select id="selectClassRateByStudentNoAndMonthselectClassRateByStudentNoAndMonth" resultType="map" parameterType="String" >
+   <![CDATA[
+	  	select course_date as courseDate,
+	  	       round(sum(normal_times + late_times + left_times)/sum(truancy_times + normal_times + late_times + left_times) * 100,2) as courseRate
+	      from statis_student_course
+	    where 
+	    	course_date >= #{fromDate}
+	    and course_date <= #{toDate}
+	    and student_no = #{studentNo}
+   group by course_date
+   ]]>
+  </select>
+  
+  <!-- 按照学期查询学生上课率 -->
+  <select id="selectClassRateByStudentNoAndTerm" resultType="map" parameterType="String" >
+   <![CDATA[
+	  	select school_term as schoolTerm,
+	  	       round((sum(normal_times) + sum(late_times) + sum(left_times))/(sum(truancy_times) + sum(normal_times) + sum(late_times) + sum(left_times)) * 100,2) as courseRate
+	      from statis_student_course
+	     where student_no = #{studentNo}
+      group by school_term
+   ]]>
+  </select>
+  
+  <!-- 查询学生到课时间 -->
+  <select id="selectClassTimeByStudentNo" resultType="map" parameterType="String" >
+   <![CDATA[
+	  	select round(sum(late_times)/(sum(truancy_times) + sum(normal_times) + sum(late_times) + sum(left_times))* 100, 2) as lateRate,
+	  	       round(sum(truancy_times)/(sum(truancy_times) + sum(normal_times) + sum(late_times) + sum(left_times))* 100, 2) as truancyRate,
+	  	       round(sum(normal_times)/(sum(truancy_times) + sum(normal_times) + sum(late_times) + sum(left_times))* 100, 2) as normalRate
+	      from statis_student_course
+	    where 
+	    	course_date >= #{fromDate}
+	    and course_date <= #{toDate}
+	    and student_no = #{studentNo}
+   ]]>
+  </select>
+  
+  <!--查询学生到课准点率 -->
+  <select id="selectOnTimeRateByStudentNo" resultType="map" parameterType="String" >
+   <![CDATA[
+	  	select school_term as schoolTerm,
+	  	       round(sum(normal_times)/(sum(truancy_times) + sum(normal_times) + sum(late_times) + sum(left_times)) * 100,2) as onTimeRate
+	      from statis_student_course
+	     where student_no = #{studentNo}
+      group by school_term
+   ]]>
+  </select>
+  
+</mapper>

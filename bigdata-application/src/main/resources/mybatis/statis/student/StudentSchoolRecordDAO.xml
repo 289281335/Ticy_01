@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.sunmnet.bigdata.web.dao.student.IStudentSchoolRecordDAO" >
+  
+  <!--查询学期的平均成绩  -->
+  <select id="selectStudentSchoolRecordByStudentNo" resultType="java.util.Map" parameterType="String" >
+	SELECT
+		s.school_term as schoolTerm,
+		round(s.average_score,0) as averageScore,
+		fail_times as failTimes
+	FROM
+		student_school_record s
+	WHERE
+		s.student_no = #{studentNo}
+	ORDER BY
+		s.school_term
+  </select>
+ 
+  <!-- 查询专业平均成绩 -->
+   <select id="selectStudentSchoolRecordByMajorCode" resultType="java.util.Map" parameterType="String" >
+	SELECT
+	   s.school_term as schoolTerm,
+	   round(AVG(s.average_score),0) as averageScore
+	FROM
+		student_school_record s
+	WHERE s.major_code = #{majorCode}
+	  AND s.average_score > 0
+	GROUP BY s.school_term
+  </select>
+  
+  <!-- 根据条件查询挂科人数 -->
+  <select id="countFailGradesStudent" resultType="Integer" parameterType="com.sunmnet.bigdata.web.model.request.student.WholePortraitREQ">
+         select count(DISTINCT sr.student_no)
+           from student_school_record sr,
+                student_info si
+  		  where 
+  		        sr.student_no = si.student_no
+  		    and sr.fail_times != 0
+  		 <if test="academyName != null and academyName != ''" >
+            and si.academy_name = #{academyName}
+         </if>
+		 <if test="collegeCode != null and collegeCode != ''" >
+            and si.college_code = #{collegeCode}
+         </if>
+         <if test="majorCode != null and majorCode != ''" >
+            and si.major_code = #{majorCode}
+         </if>
+         <if test="className != null and className != ''" >
+             and si.class_name = #{className}
+         </if>
+         <if test="nation != null and nation != ''" >
+            and si.nation = #{nation}
+         </if>
+         <if test="gender != null and gender != ''" >
+            and si.gender = #{gender}
+         </if>
+         <if test="nativePlace != null and nativePlace != ''" >
+            and si.native_place = #{nativePlace}
+         </if>
+          <if test="schoolYear != null and schoolYear != ''" >
+            and SUBSTR(sr.school_term, 1, 4) = #{schoolYear}
+         </if>
+         <if test="schoolYear == null or schoolYear == ''" >
+            and si.status = '1'
+         </if>
+  </select>
+  
+  <!-- 查询专业人数 -->
+  <select id="selectStudentCountByMajorCode" resultType="Integer" parameterType="string">
+  select count(s.student_no)
+    from student_info s,
+         student_school_record r
+   where s.student_no = r.student_no
+     and r.major_code = #{majorCode}
+  </select>
+  
+  <!-- 查询学生在专业排名 -->
+  <select id="selectScoreRankingByStudentNoAndMajorCode" resultType="Integer" parameterType="string">
+ SELECT c.rowno from 
+         (SELECT @rowno:=@rowno + 1 AS rowno,a.* 
+           FROM (select r.student_no,
+                        AVG((r.average_score)) as average_score
+                   from student_info s,
+                        student_school_record r
+                  where s.student_no = r.student_no
+                    and r.major_code = #{majorCode}
+               GROUP BY r.student_no
+               order by average_score desc) a,
+               (SELECT @rowno:=0) b) c
+   where c.student_no = #{studentNo}
+  </select>
+  
+  <!-- 查询学习稳定性排名 -->
+  <select id="selectStabilityRankingByStudentNoAndMajorCode" resultType="Integer" parameterType="string">
+	 SELECT c.rowno from 
+	         (SELECT @rowno:=@rowno + 1 AS rowno,a.* 
+	           FROM (select r.student_no,
+	                        STD(r.average_score)/count(*) std
+	                   from student_info s,
+	                        student_school_record r
+	                  where s.student_no = r.student_no
+	                    and r.major_code = #{majorCode}
+	               GROUP BY r.student_no
+	               order by std asc) a,
+	               (SELECT @rowno:=0) b) c
+	   where c.student_no = #{studentNo}
+  </select>
+</mapper>

@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.sunmnet.bigdata.web.dao.student.IStudentIndexDisplayInfoDAO" >
+
+    <select id="selectByPrimaryKey" resultType="com.sunmnet.bigdata.web.model.entity.student.StudentIndexDisplayInfo" parameterType="java.lang.Long" >
+        select 
+         id, index_code, index_name, weight, base, create_time, modify_time
+        from student_index_display_info
+        where id = #{id,jdbcType=BIGINT}
+    </select>
+    <!--获取学生样本显示指标和权重-->
+	  <select id="getAll" resultType="com.sunmnet.bigdata.web.model.entity.student.StudentIndexDisplayInfo" parameterType="java.lang.Long" >
+        select 
+         id, index_code, index_name, weight, base, create_time, modify_time
+        from student_index_display_info
+    </select>
+
+    <insert id="insertSelective" parameterType="com.sunmnet.bigdata.web.model.entity.student.StudentIndexDisplayInfo" >
+        insert into student_index_display_info
+        <trim prefix="(" suffix=")" suffixOverrides="," >
+            <if test="id != null" >
+                id,
+            </if>
+            <if test="indexCode != null" >
+                index_code,
+            </if>
+            <if test="indexName != null" >
+                index_name,
+            </if>
+            <if test="weight != null" >
+                weight,
+            </if>
+            <if test="base != null" >
+                base,
+            </if>
+            <if test="createTime != null" >
+                create_time,
+            </if>
+            <if test="modifyTime != null" >
+                modify_time,
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides="," >
+            <if test="id != null" >
+                #{id,jdbcType=BIGINT},
+            </if>
+            <if test="indexCode != null" >
+                #{indexCode,jdbcType=VARCHAR},
+            </if>
+            <if test="indexName != null" >
+                #{indexName,jdbcType=VARCHAR},
+            </if>
+            <if test="weight != null" >
+                #{weight,jdbcType=DOUBLE},
+            </if>
+            <if test="base != null" >
+                #{base,jdbcType=DOUBLE},
+            </if>
+            <if test="createTime != null" >
+                #{createTime,jdbcType=VARCHAR},
+            </if>
+            <if test="modifyTime != null" >
+                #{modifyTime,jdbcType=VARCHAR},
+            </if>
+        </trim>
+    </insert>
+
+    <update id="updateByPrimaryKeySelective" parameterType="com.sunmnet.bigdata.web.model.entity.student.StudentIndexDisplayInfo" >
+        update student_index_display_info
+        <set >
+            <if test="indexCode != null" >
+                index_code = #{indexCode,jdbcType=VARCHAR},
+            </if>
+            <if test="indexName != null" >
+                index_name = #{indexName,jdbcType=VARCHAR},
+            </if>
+            <if test="weight != null" >
+                weight = #{weight,jdbcType=DOUBLE},
+            </if>
+            <if test="base != null" >
+                base = #{base,jdbcType=DOUBLE},
+            </if>
+            <if test="createTime != null" >
+                create_time = #{createTime,jdbcType=VARCHAR},
+            </if>
+            <if test="modifyTime != null" >
+                modify_time = #{modifyTime,jdbcType=VARCHAR},
+            </if>
+        </set>
+        where id = #{id,jdbcType=BIGINT}
+    </update>
+
+    <delete id="deleteByPrimaryKey" parameterType="java.lang.Long" >
+        delete from student_index_display_info
+        where id = #{id,jdbcType=BIGINT}
+    </delete>
+
+</mapper>

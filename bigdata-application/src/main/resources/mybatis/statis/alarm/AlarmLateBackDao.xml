@@ -1,0 +1,380 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+<mapper namespace="com.sunmnet.bigdata.web.dao.alarm.IAlarmLateBackDAO">
+<!--
+save
+update
+findOne
+findOneByProperty
+findOneByCondition
+delete
+deleteByCondition
+deleteByProperty
+findAll
+queryPage
+count
+-->
+
+
+
+<sql id="Base_Column_List">
+  student_no as studentNo ,
+  warning_time as warningTime ,
+  warning_date as warningDate ,
+  late_back_times as lateBackTimes ,
+  late_back_reason as lateBackReason ,
+  remark as remark ,
+  deal_flag as dealFlag ,
+  deal_date as dealDate
+</sql>
+
+  <!-- 查询待处理预警数量 -->
+  <select id="countDealWarning" resultType="int" parameterType="StudentInfoREQ">
+    select count(*)
+    from
+    (
+      SELECT
+        student_no,
+        '晚归' AS warning_type,
+        SUBSTR(warning_date, 1, 7) AS warning_date
+      FROM alarm_late_back
+      WHERE deal_flag = '0'
+      UNION ALL
+      SELECT
+        student_no,
+        '失联' AS warning_type,
+        SUBSTR(warning_date, 1, 7) AS warning_date
+      FROM alarm_student_lost
+      WHERE deal_flag = '0'
+
+    ) w,
+    student_info si
+    WHERE
+    w.student_no = si.student_no
+    <if test="academyName != null and academyName != ''" >
+      and si.academy_name = #{academyName}
+    </if>
+    <if test="collegeCode != null and collegeCode != ''" >
+      and si.college_code = #{collegeCode}
+    </if>
+    <if test="majorCode != null and majorCode != ''" >
+      and si.major_code = #{majorCode}
+    </if>
+    <if test="className != null and className != ''" >
+      and si.class_name = #{className}
+    </if>
+    <if test="nation != null and nation != ''" >
+      and si.nation = #{nation}
+    </if>
+    <if test="gender != null and gender != ''" >
+      and si.gender = #{gender}
+    </if>
+    <if test="nativePlace != null" >
+      and si.native_place = #{nativePlace}
+    </if>
+    <if test="startDate != null and startDate != ''" >
+      <![CDATA[ and w.warning_date >= #{startDate} ]]>
+    </if>
+    <if test="endDate != null and endDate != ''" >
+      <![CDATA[ and w.warning_date <= #{endDate} ]]>
+    </if>
+  </select>
+
+
+  <!-- 查询待处理预警数量 -->
+  <select id="listWarningStudent" resultType="Map" >
+    <![CDATA[
+    SELECT
+      s.student_no AS studentNo,
+      s.name AS studentName,
+      COUNT(*) AS warningTimes
+    FROM
+      (
+        SELECT
+          lw.student_no,
+          lw.warning_date,
+          '晚归' AS warning_type
+        FROM alarm_late_back lw
+        where substr(lw.warning_date,1,7) >= #{fromDate} and substr(lw.warning_date,1,7) <= #{toDate}
+        UNION ALL
+        SELECT
+          ow.student_no,
+          ow.warning_date,
+          '失联' AS warning_type
+        FROM
+          alarm_student_lost ow
+    where substr(ow.warning_date,1,7) >= #{fromDate} and substr(ow.warning_date,1,7) <= #{toDate}
+    ) w,student_info s
+    WHERE w.student_no = s.student_no
+    GROUP BY s.student_no,s.name
+    ORDER BY warningTimes DESC
+    LIMIT 0, 5
+    ]]>
+  </select>
+
+  <!-- 查询行为预警列表 -->
+    <select id="listLateBackAndLostWarning" resultType="Map" parameterType="String">
+        <![CDATA[
+    select w.student_no as studentNo,
+           w.name as name,
+           w.major_name as majorName,
+           w.sign_date as signDate,
+           w.warning_content as warningContent,
+           w.warning_date as warningDate,
+           w.deal_flag as dealFlag,
+           w.warning_type as warningType,
+           w.warning_level as warningLevel
+      from
+       (select lw.student_no,
+               si.name,
+               si.major_name,
+               si.major_code,
+               lw.warning_time as sign_date,
+               CONCAT('夜归',lw.late_back_times,'次') as warning_content,
+	  	       lw.warning_date,
+	  	       '夜归预警' as warning_type,
+	  	       case when (lw.late_back_times >= 15) then '严重'
+	  	            when (lw.late_back_times < 15 and lw.late_back_times >= 10) then '较重'
+	  	            when (lw.late_back_times < 10 and lw.late_back_times >= 5) then '一般'
+	  	            else '轻微' end as warning_level,
+	  	       case when lw.deal_flag = '0' then '未处理' else '已处理' end as deal_flag
+	  	  from alarm_late_back lw,
+	  	       student_info si
+	  	 where lw.student_no = si.student_no
+	 union all
+  	  	select ow.student_no,
+  	  	       si.name,
+               si.major_name,
+               si.major_code,
+               ow.last_date as sign_date,
+               CONCAT('失联',case when ow.deal_flag = '0' then round((UNIX_TIMESTAMP(ow.update_date) - UNIX_TIMESTAMP(ow.last_date))/(24*60*60),0) else round((UNIX_TIMESTAMP(ow.deal_date) - UNIX_TIMESTAMP(ow.last_date))/(24*60*60),0) end, '天') as warning_content,
+	  	       ow.warning_date,
+	  	       '失联预警' as warning_type,
+	  	       case when (ow.deal_flag = '0' and (UNIX_TIMESTAMP(ow.update_date) - UNIX_TIMESTAMP(ow.last_date))/(24*60*60) >= 5) then '严重'
+	  	            when (ow.deal_flag = '0' and (UNIX_TIMESTAMP(ow.update_date) - UNIX_TIMESTAMP(ow.last_date))/(24*60*60) < 5  and (UNIX_TIMESTAMP(ow.update_date) - UNIX_TIMESTAMP(ow.last_date))/(24*60*60) >= 4)   then '较重'
+	  	            when (ow.deal_flag = '0' and (UNIX_TIMESTAMP(ow.update_date) - UNIX_TIMESTAMP(ow.last_date))/(24*60*60) < 4  and (UNIX_TIMESTAMP(ow.update_date) - UNIX_TIMESTAMP(ow.last_date))/(24*60*60) >= 3)   then '一般'
+	  	            when (ow.deal_flag = '0' and (UNIX_TIMESTAMP(ow.update_date) - UNIX_TIMESTAMP(ow.last_date))/(24*60*60) < 3)  then '轻微'
+	  	            when (ow.deal_flag = '1' and (UNIX_TIMESTAMP(ow.deal_date) - UNIX_TIMESTAMP(ow.last_date))/(24*60*60) >= 5) then '严重'
+	  	            when (ow.deal_flag = '1' and (UNIX_TIMESTAMP(ow.deal_date) - UNIX_TIMESTAMP(ow.last_date))/(24*60*60) < 5 and (UNIX_TIMESTAMP(ow.deal_date) - UNIX_TIMESTAMP(ow.last_date))/(24*60*60) >= 4) then '较重'
+	  	            when (ow.deal_flag = '1' and (UNIX_TIMESTAMP(ow.deal_date) - UNIX_TIMESTAMP(ow.last_date))/(24*60*60) < 4 and (UNIX_TIMESTAMP(ow.deal_date) - UNIX_TIMESTAMP(ow.last_date))/(24*60*60) >= 3) then '一般'
+	  	            when (ow.deal_flag = '1' and (UNIX_TIMESTAMP(ow.deal_date) - UNIX_TIMESTAMP(ow.last_date))/(24*60*60) < 3) then '轻微'
+	  	            else '' end as warning_level,
+	  	       case when ow.deal_flag = '0' then '未处理' else '已处理' end as deal_flag
+	  	  from alarm_student_lost ow,
+	  	       student_info si
+	  	 where ow.student_no = si.student_no) w
+	  where 1=1 and w.deal_flag = '未处理'
+	  ]]>
+        <if test="name != null and name != ''" >
+           and w.name = #{name}
+        </if>
+        <if test="majorCode != null and majorCode != ''" >
+           and w.major_code = #{majorCode}
+        </if>
+        <if test="warningType != null and warningType != ''" >
+           and w.warning_type = #{warningType}
+        </if>
+        <if test="warningLevel != null and warningLevel != ''" >
+           and w.warning_level = #{warningLevel}
+        </if>
+        <if test="warningDate != null and warningDate != ''" >
+           and substr(w.warning_date,1,10) = #{warningDate}
+        </if>
+      order by warningDate desc, studentNumber asc
+  </select>
+
+<!--//学生行为预警月数量-->
+    <select id="listWarningMonthCount" resultType="map" parameterType="String">
+        <![CDATA[
+       select w.warning_date as warningDate,
+              count(*) as warningCount
+        from
+	  	(select lw.student_no,
+	  	        substr(lw.warning_date,1,7) as warning_date,
+	  	       '晚归' as warning_type
+	  	  from alarm_late_back lw
+	  	 where substr(lw.warning_date,1,7) >= date_format(date_sub(now(), interval 11 month), '%Y-%m') and substr(lw.warning_date,1,7) <= date_format(now(),'%Y-%m')
+	 union all
+	  	select ow.student_no,
+	  	       substr(ow.warning_date,1,7) as warning_date,
+	  	       '失联' as warning_type
+	  	  from alarm_student_lost ow
+	  	 where substr(ow.warning_date,1,7) >= date_format(date_sub(now(), interval 11 month), '%Y-%m') and substr(ow.warning_date,1,7) <= date_format(now(),'%Y-%m')) w
+	  group by w.warning_date
+	  order by warningDate desc
+	  ]]>
+    </select>
+    <!--更新晚归预警标识-->
+    <update id="updateLateBackWarning" parameterType="String" >
+     update alarm_late_back set deal_flag = '1',deal_date = now(), late_back_reason=#{reason}, remark=#{remark} where student_no = #{studentNo} and warning_date = #{warningDate}
+    </update>
+    <!--学生紧急预警数量Top5-->
+    <select id="countEmerWarningStudent" resultType="Map" parameterType="String">
+    <![CDATA[
+    select s.student_no as studentNo,
+           s.name as studentName,
+           count(*) as warningTimes
+      from
+	  	(select lw.student_no,
+	  	        lw.late_back_times as warning_date,
+	  	       '晚归' as warning_type
+	  	  from alarm_late_back lw
+	  	 where substr(lw.warning_date,1,7) >= #{fromDate} and substr(lw.warning_date,1,7) <= #{toDate}
+	  	   and lw.late_back_times >= 15
+	 union all
+	  	select ow.student_no,
+	  	       ow.warning_date as warning_date,
+	  	       '失联' as warning_type
+	  	  from alarm_student_lost ow
+	  	  where substr(ow.warning_date,1,7) >= #{fromDate} and substr(ow.warning_date,1,7) <= #{toDate}
+	  	   and ((ow.deal_flag = '0' and (UNIX_TIMESTAMP(ow.update_date) - UNIX_TIMESTAMP(ow.last_date))/(24*60*60) >= 5)
+	  	    or (ow.deal_flag = '1' and (UNIX_TIMESTAMP(ow.deal_date) - UNIX_TIMESTAMP(ow.last_date))/(24*60*60) >= 5))) w,
+	  	 student_info s
+	 where w.student_no = s.student_no
+	 group by s.student_no, s.name
+     order by warningTimes desc limit 0,5
+     ]]>
+    </select>
+    <!-- 查询每日前15的紧急预警数量 -->
+    <select id="countEmerWarningDay" resultType="map" parameterType="String">
+        <![CDATA[
+       select substr(w.warning_date,1,10) as warningDate,
+              count(*) as warningCount
+        from
+	  	(select lw.student_no,
+	  	        lw.warning_date,
+	  	       '夜归' as warning_type
+	  	  from alarm_late_back lw
+	  	 where substr(lw.warning_date,1,10) >= date_format(date_sub(now(), interval 60 day), '%Y-%m-%d') and substr(lw.warning_date,1,10) <= date_format(now(),'%Y-%m-%d')
+	 union all
+	  	select ow.student_no,
+	  	       ow.warning_date,
+	  	       '失联' as warning_type
+	  	  from alarm_student_lost ow
+	  	 where substr(ow.warning_date,1,10) >= date_format(date_sub(now(), interval 60 day), '%Y-%m-%d') and substr(ow.warning_date,1,10) <= date_format(now(),'%Y-%m-%d')) w
+	  group by substr(w.warning_date,1,10)
+	  order by warningDate desc
+	  limit 0,15
+	  ]]>
+    </select>
+    <!--查询待处理紧急预警数-->
+    <select id="countDealEmerWarning" resultType="int" parameterType="StudentInfoREQ">
+        select count(*)
+        from
+        (select lw.student_no,
+        '夜归' as warning_type,
+        substr(lw.warning_date,1,7) as warning_date
+        from alarm_late_back lw
+        where lw.deal_flag = '0'
+        and lw.late_back_times >= 15
+        union all
+        select ow.student_no,
+        '失联' as warning_type,
+        substr(ow.warning_date,1,7) as warning_date
+        from alarm_student_lost ow
+        where ow.deal_flag = '0'
+        and (UNIX_TIMESTAMP(ow.update_date) - UNIX_TIMESTAMP(ow.last_date))/(24*60*60) >= 5) w,
+        student_info si
+        WHERE w.student_no = si.student_no
+        <if test="academyName != null and academyName != ''" >
+            and si.academy_name = #{academyName}
+        </if>
+        <if test="collegeCode != null and collegeCode != ''" >
+            and si.college_code = #{collegeCode}
+        </if>
+        <if test="majorCode != null and majorCode != ''" >
+            and si.major_code = #{majorCode}
+        </if>
+        <if test="className != null and className != ''" >
+            and si.class_name = #{className}
+        </if>
+        <if test="nation != null and nation != ''" >
+            and si.nation = #{nation}
+        </if>
+        <if test="gender != null and gender != ''" >
+            and si.gender = #{gender}
+        </if>
+        <if test="studentPlace != null and studentPlace != ''" >
+            and si.student_place = #{studentPlace}
+        </if>
+        <if test="startDate != null and startDate != ''" >
+            <![CDATA[ and w.warning_date >= #{startDate} ]]>
+        </if>
+        <if test="endDate != null and endDate != ''" >
+            <![CDATA[ and w.warning_date <= #{endDate} ]]>
+        </if>
+    </select>
+    <!--紧急预警分页列表pageEmerWarning-->
+    <select id="pageEmerWarning" resultType="StudentInfoRES" parameterType="StudentInfoRES">
+        <![CDATA[
+    select w.student_no as studentNo,
+           w.name as name,
+           w.major_name as majorName,
+           w.sign_date as signDate,
+           w.warning_content as warningContent,
+           w.warning_date as warningDate,
+           w.deal_flag as dealFlag,
+           w.warning_type as warningType,
+           w.warning_level as warningLevel
+      from
+       (select lw.student_no,
+               si.name,
+               si.major_name,
+               si.major_code,
+               lw.warning_time as sign_date,
+               CONCAT('夜归',lw.late_back_times,'次') as warning_content,
+	  	       lw.warning_date,
+	  	       '夜归预警' as warning_type,
+	  	       case when (lw.late_back_times >= 15) then '严重'
+	  	            when (lw.late_back_times < 15 and lw.late_back_times >= 10) then '较重'
+	  	            when (lw.late_back_times < 10 and lw.late_back_times >= 5) then '一般'
+	  	            else '轻微' end as warning_level,
+	  	       case when lw.deal_flag = '0' then '未处理' else '已处理' end as deal_flag
+	  	  from alarm_late_back lw,
+	  	       student_info si
+	  	 where lw.student_no = si.student_no
+	 union all
+  	  	select ow.student_no,
+  	  	       si.name,
+               si.major_name,
+               si.major_code,
+               ow.last_date as sign_date,
+               CONCAT('失联',case when ow.deal_flag = '0' then round((UNIX_TIMESTAMP(ow.update_date) - UNIX_TIMESTAMP(ow.last_date))/(24*60*60),0) else round((UNIX_TIMESTAMP(ow.deal_date) - UNIX_TIMESTAMP(ow.last_date))/(24*60*60),0) end, '天') as warning_content,
+	  	       ow.warning_date,
+	  	       '失联预警' as warning_type,
+	  	       case when (ow.deal_flag = '0' and (UNIX_TIMESTAMP(ow.update_date) - UNIX_TIMESTAMP(ow.last_date))/(24*60*60) >= 5) then '严重'
+	  	            when (ow.deal_flag = '0' and (UNIX_TIMESTAMP(ow.update_date) - UNIX_TIMESTAMP(ow.last_date))/(24*60*60) < 5  and (UNIX_TIMESTAMP(ow.update_date) - UNIX_TIMESTAMP(ow.last_date))/(24*60*60) >= 4)   then '较重'
+	  	            when (ow.deal_flag = '0' and (UNIX_TIMESTAMP(ow.update_date) - UNIX_TIMESTAMP(ow.last_date))/(24*60*60) < 4  and (UNIX_TIMESTAMP(ow.update_date) - UNIX_TIMESTAMP(ow.last_date))/(24*60*60) >= 3)   then '一般'
+	  	            when (ow.deal_flag = '0' and (UNIX_TIMESTAMP(ow.update_date) - UNIX_TIMESTAMP(ow.last_date))/(24*60*60) < 3)  then '轻微'
+	  	            when (ow.deal_flag = '1' and (UNIX_TIMESTAMP(ow.deal_date) - UNIX_TIMESTAMP(ow.last_date))/(24*60*60) >= 5) then '严重'
+	  	            when (ow.deal_flag = '1' and (UNIX_TIMESTAMP(ow.deal_date) - UNIX_TIMESTAMP(ow.last_date))/(24*60*60) < 5 and (UNIX_TIMESTAMP(ow.deal_date) - UNIX_TIMESTAMP(ow.last_date))/(24*60*60) >= 4) then '较重'
+	  	            when (ow.deal_flag = '1' and (UNIX_TIMESTAMP(ow.deal_date) - UNIX_TIMESTAMP(ow.last_date))/(24*60*60) < 4 and (UNIX_TIMESTAMP(ow.deal_date) - UNIX_TIMESTAMP(ow.last_date))/(24*60*60) >= 3) then '一般'
+	  	            when (ow.deal_flag = '1' and (UNIX_TIMESTAMP(ow.deal_date) - UNIX_TIMESTAMP(ow.last_date))/(24*60*60) < 3) then '轻微'
+	  	            else '' end as warning_level,
+	  	       case when ow.deal_flag = '0' then '未处理' else '已处理' end as deal_flag
+	  	  from alarm_student_lost ow,
+	  	       student_info si
+	  	 where ow.student_no = si.student_no) w
+	  where 1=1 and w.warning_level = '严重' and w.deal_flag = '未处理'
+   ]]>
+        <if test="studentName != null and studentName != ''" >
+            and w.student_name = #{studentName}
+        </if>
+        <if test="majorCode != null and majorCode != ''" >
+            and w.major_code = #{majorCode}
+        </if>
+        <if test="warningType != null and warningType != ''" >
+            and w.warning_type = #{warningType}
+        </if>
+        <if test="warningDate != null and warningDate != ''" >
+            and substr(w.warning_date,1,10) = #{warningDate}
+        </if>
+        <!--<if test="sort!=null">-->
+            <!--order by ${sort.toString().replace(":","")}-->
+        <!--</if>-->
+        order by warningDate desc, studentNo asc
+    </select>
+</mapper>
+

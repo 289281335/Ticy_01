@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+<mapper namespace="com.sunmnet.bigdata.web.dao.student.IStudentScoresDAO">
+<!--
+save
+update
+findOne
+findOneByProperty
+findOneByCondition
+delete
+deleteByCondition
+deleteByProperty
+findAll
+queryPage
+count
+-->
+
+  <select id="listScoresByStudentNo" resultType="StudentScoresRES" parameterType="java.lang.String">
+    SELECT
+     student_no as studentNo ,
+    student_name as studentName ,
+    course_type as courseType ,
+    credits as credits ,
+    course_code as courseCode ,
+    course_name as courseName ,
+    comment_grade as commentGrade ,
+    class_code as classCode ,
+    semester as semester ,
+    score as score ,
+    examination_date as examinationDate
+    from
+    student_scores
+    where student_no = #{studentNo}
+  </select>
+
+  <!--学生成绩分布-->
+  <select id="countStudentScore" resultType="Map">
+    <![CDATA[
+    select
+    (SELECT count(student_no) from student_scores sc where sc.score is not null)as conuntAll,
+    (SELECT count(student_no) from student_scores sc where sc.score<=62)as conunt0,
+    (SELECT count(student_no) from student_scores sc where sc.score BETWEEN 63 and 72) as conunt1,
+    (SELECT count(student_no) from student_scores sc where sc.score BETWEEN 73 and 82) as conunt2,
+    (SELECT count(student_no) from student_scores sc where sc.score BETWEEN 83 and 92) as conunt3,
+    (SELECT count(student_no) from student_scores sc where sc.score>=93) as conunt4
+    from
+    dual
+    ]]>
+  </select>
+</mapper>
+

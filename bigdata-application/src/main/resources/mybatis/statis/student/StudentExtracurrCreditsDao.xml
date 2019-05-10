@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+<mapper namespace="com.sunmnet.bigdata.web.dao.student.IStudentExtracurrCreditsDAO">
+<!--
+save
+update
+findOne
+findOneByProperty
+findOneByCondition
+delete
+deleteByCondition
+deleteByProperty
+findAll
+queryPage
+count
+-->
+
+  <select id="class8creditsByStudentNo" resultType="StudentExtracurrCredits" parameterType="String" >
+    SELECT
+      project_name as projectName ,credit as credit
+    FROM student_extracurr_credits
+    WHERE student_no = #{stuNo,jdbcType=VARCHAR}
+    GROUP BY project_name,credit
+  </select>
+
+  <select id="countByStudentNo" resultType="java.util.HashMap" parameterType="String" >
+    select
+    (select count(*) from student_extracurr_credits  sec
+    where sec.student_no = student_no = #{studentNo,jdbcType=VARCHAR} and project_name like '%竞赛%') as js_count,
+    (select count(*) as hd_count from student_extracurr_credits  sec
+    where sec.student_no = student_no = #{studentNo,jdbcType=VARCHAR} and project_name not like '%竞赛%') as hd_count
+    from
+    dual
+  </select>
+
+</mapper>
+

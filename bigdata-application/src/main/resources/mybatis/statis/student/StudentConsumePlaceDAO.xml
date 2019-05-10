@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.sunmnet.bigdata.web.dao.student.IStudentConsumePlaceDAO" >
+  
+  <!-- 查询学生餐饮消费地点统计信息 -->
+  <select id="getDietPlace" resultType="com.sunmnet.bigdata.web.model.entity.student.StudentConsumePlace" parameterType="string">
+      <![CDATA[ 
+       select s.id, s.student_no, s.student_name, s.consume_start_date, s.consume_end_date, s.consume_place, s.consume_window,
+    		  d.name as consume_type, s.consume_times, s.consume_amount
+	     from statis_student_consume_place s,
+	          dict_dictionary d
+	    where s.consume_type = '餐饮'
+	      and s.consume_window = d.key
+	      and student_no = #{studentNo}
+	      and consume_start_date >= #{consumeStartDate}
+		  and consume_end_date <= #{consumeEndDate}
+	 order by consume_amount desc
+	 ]]>
+  </select>
+  
+  <!-- 查询学生消费地点信息 -->
+  <select id="getAllConsumePlace" resultType="Map" parameterType="string">
+    <![CDATA[ 
+	SELECT c.consume_place as consumePlace,
+	       c.consume_amount as consumeAmount,
+	       c.consume_times as consumeTimes,
+	       w.latitude,
+	       w.longitude 
+	  FROM
+		   (select sscp.consume_place,
+			       sum(sscp.consume_amount) consume_amount,
+			       sum(sscp.consume_times) consume_times
+			  from statis_student_consume_place sscp
+		     where sscp.student_no = #{studentNo}
+		       and sscp.consume_start_date >= #{consumeStartDate}
+		       and sscp.consume_end_date <= #{consumeEndDate}
+		  group by sscp.consume_place ) c
+	left join (select DISTINCT p.localtion,p.longitude, p.latitude from school_position p) w
+	       on c.consume_place = w.localtion
+     order by c.consume_amount desc
+     ]]>
+   </select>
+   
+   <!-- 根据条件查询消费地点 -->
+   <select id="getWholeDietPlaceByCondition" resultType="java.util.Map" parameterType="com.sunmnet.bigdata.web.model.request.student.WholePortraitREQ">
+		SELECT p.consume_window as consumeWindow,
+		       sum(p.consume_times) as consumeTimes
+		  FROM portrait_student_consume p
+		 WHERE 1 = 1 
+		 <if test="academyName != null and academyName != ''" >
+            and p.academy_name = #{academyName}
+         </if>
+		 <if test="collegeCode != null and collegeCode != ''" >
+            and p.college_code = #{collegeCode}
+         </if>
+         <if test="majorCode != null and majorCode != ''" >
+            and p.major_code = #{majorCode}
+         </if>
+         <if test="className != null and className != ''" >
+            and p.class_name = #{className}
+         </if>
+         <if test="nation != null and nation != ''" >
+            and cp.nation = #{nation}
+         </if>
+         <if test="gender != null and gender != ''" >
+            and p.gender = #{gender}
+         </if>
+         <if test="nativePlace != null and nativePlace != ''" >
+            and p.student_place = #{nativePlace}
+         </if>
+         <if test="startDate != null and startDate != ''" >
+          	 <![CDATA[ and p.consume_start_date >= #{startDate} ]]>
+         </if>
+         <if test="endDate != null and endDate != ''" >
+          	 <![CDATA[ and p.consume_end_date <= #{endDate} ]]>
+         </if>
+	  group by p.consume_window
+	  order by consumeTimes desc limit 0,10
+   </select>
+</mapper>

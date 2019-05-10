@@ -1,0 +1,426 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+<mapper namespace="com.sunmnet.bigdata.web.dao.student.IStudentSupportInfoDAO">
+<!--
+save
+update
+findOne
+findOneByProperty
+findOneByCondition
+delete
+deleteByCondition
+deleteByProperty
+findAll
+queryPage
+count
+-->
+
+  <!-- 按条件查询每个院的贫困生总人数 -->
+  <select id="countPoorStudent" parameterType="com.sunmnet.bigdata.web.model.request.student.StudentInfoREQ" resultType="java.lang.Integer">
+    SELECT count(*)
+    FROM student_support_info a
+    JOIN  student_info b ON  a.student_no = b.student_no
+    <where>
+      <if test="collegeCode!=null and collegeCode!=null">
+        a.college_code = #{collegeCode}
+      </if>
+      <if test="majorCode!=null and majorCode!=''">
+        AND a.major_code = #{majorCode}
+      </if>
+      <if test="className!=null and className!=''">
+        AND b.class_name = #{className}
+      </if>
+      <if test="nation!=null and nation!=''">
+        AND a.nation = #{nation}
+      </if>
+      <if test="studentPlace!=null and studentPlace!=''">
+        AND a.student_place = #{studentPlace}
+      </if>
+      <if test="gender!=null and gender!=''">
+        AND a.gender = #{gender}
+      </if>
+      <if test="schoolYear!=null and schoolYear!=''">
+        AND a.school_year = #{schoolYear}
+      </if>
+      <if test="academyName!=null and academyName!=''">
+        AND b.academy_name = #{academyName}
+      </if>
+    </where>
+  </select>
+
+
+
+
+  <!-- 根据条件查询学生的异常贫困生总人数 -->
+  <select id="countAbnormalPoorStudent" parameterType="com.sunmnet.bigdata.web.model.request.student.StudentInfoREQ"
+          resultType="java.lang.Integer">
+
+    SELECT count(1)
+    FROM student_info a
+    JOIN predict_suspected_student b on a.student_no = b.student_no
+    <trim prefix="WHERE" prefixOverrides="AND | OR">
+
+      <if test="category != null" >
+        and b.category = #{category}
+      </if>
+      <if test="studentNo != null" >
+        and student_no = #{studentNo}
+      </if>
+      <if test="identityNo != null" >
+        and identity_no = #{identityNo}
+      </if>
+      <if test="name != null" >
+        and name = #{name}
+      </if>
+      <if test="gender != null" >
+        and gender = #{gender}
+      </if>
+      <if test="phone != null" >
+        and phone = #{phone}
+      </if>
+      <if test="email != null" >
+        and email = #{email}
+      </if>
+
+      <if test="nativePlace != null" >
+        and native_place = #{nativePlace}
+      </if>
+      <if test="politicalLandscape != null" >
+        and political_landscape = #{politicalLandscape}
+      </if>
+      <if test="examineeNo != null" >
+        and examinee_no = #{examineeNo}
+      </if>
+      <if test="schoolYear != null" >
+        and school_year = #{schoolYear}
+      </if>
+      <if test="graduatedSchool != null" >
+        and graduated_school = #{graduatedSchool}
+      </if>
+      <if test="academyName != null" >
+        and academy_name = #{academyName}
+      </if>
+      <if test="collegeName != null" >
+        and college_name = #{collegeName}
+      </if>
+      <if test="collegeCode != null" >
+        and college_code = #{collegeCode}
+      </if>
+      <if test="majorName != null" >
+        and major_name = #{majorName}
+      </if>
+      <if test="majorCode != null" >
+        and major_code = #{majorCode}
+      </if>
+      <if test="className != null" >
+        and class_name = #{className}
+      </if>
+      <if test="status != null" >
+        and status = #{status}
+      </if>
+      <if test="nation != null" >
+        and nation = #{nation}
+      </if>
+      <if test="birthday != null" >
+        and birthday = #{birthday}
+      </if>
+    </trim>
+  </select>
+
+
+  <select id="listPoorStudent" parameterType="com.sunmnet.bigdata.web.model.request.student.StudentInfoREQ"
+          resultType="com.sunmnet.bigdata.web.model.response.student.StudentInfoRES">
+    SELECT
+      t.student_no,
+      t.name,
+      MIN(t.label) AS label
+    FROM (
+      SELECT
+      a.student_no,
+      a.name,
+      CASE WHEN b.status IS NOT NULL AND b.category=2 THEN '1'
+      WHEN b.status IS NOT NULL AND b.category=1 IS NULL THEN '2'
+      WHEN c.support_type IS NOT NULL THEN '3'
+      WHEN c.support_type IS NULL THEN '4'
+      END AS label
+      FROM
+      student_info a
+      LEFT JOIN predict_suspected_student b ON a.student_no = b.student_no
+      LEFT JOIN student_support_info c ON a.student_no = c.student_no
+    <trim prefix="WHERE" prefixOverrides="AND | OR">
+      AND a.`status` = '1'
+      <if test="studentNo != null" >
+        and a.student_no = #{studentNo}
+      </if>
+      <if test="identityNo != null" >
+        and a.identity_no = #{identityNo}
+      </if>
+      <if test="name != null" >
+        and a.name = #{name}
+      </if>
+      <if test="gender != null" >
+        and a.gender = #{gender}
+      </if>
+      <if test="phone != null" >
+        and a.phone = #{phone}
+      </if>
+      <if test="email != null" >
+        and a.email = #{email}
+      </if>
+
+      <if test="nativePlace != null" >
+        and a.native_place = #{nativePlace}
+      </if>
+      <if test="politicalLandscape != null" >
+        and a.political_landscape = #{politicalLandscape}
+      </if>
+      <if test="examineeNo != null" >
+        and a.examinee_no = #{examineeNo}
+      </if>
+      <if test="schoolYear != null" >
+        and a.school_year = #{schoolYear}
+      </if>
+      <if test="graduatedSchool != null" >
+        and a.graduated_school = #{graduatedSchool}
+      </if>
+      <if test="academyName != null" >
+        and a.academy_name = #{academyName}
+      </if>
+      <if test="collegeName != null" >
+        and a.college_name = #{collegeName}
+      </if>
+      <if test="collegeCode != null" >
+        and a.college_code = #{collegeCode}
+      </if>
+      <if test="majorName != null" >
+        and a.major_name = #{majorName}
+      </if>
+      <if test="majorCode != null" >
+        and a.major_code = #{majorCode}
+      </if>
+      <if test="className != null" >
+        and a.class_name = #{className}
+      </if>
+      <if test="nation != null" >
+        and a.nation = #{nation}
+      </if>
+      <if test="birthday != null" >
+        and a.birthday = #{birthday}
+      </if>
+    </trim>
+    ) t GROUP BY t.student_no,t.name
+
+
+    SELECT DISTINCT
+    d.student_no,
+    d.student_name,
+    min( label ) AS label
+    FROM
+    (
+    SELECT
+    *,
+    '1' AS label
+    FROM
+    (
+    SELECT
+    a.student_no,
+    a.student_name,
+    a.college_code,
+    a.major_code,
+    a.class_name,
+    a.nation,
+    a.native_place,
+    a.gender,
+    a.grade,
+    a.academy_name,
+    b.poorstatus
+    FROM
+    student_info a
+    LEFT JOIN predict_suspected_student b ON a.student_no = b.student_no
+    WHERE
+    b.status IS NOT NULL
+    AND a.`status` = '1'
+    ) AS c
+    UNION ALL
+    SELECT
+    *,
+    '2' AS lable
+    FROM
+    (
+    SELECT
+    a.student_no,
+    a.student_name,
+    a.college_code,
+    a.major_code,
+    a.class_name,
+    a.nation,
+    a.native_place,
+    a.gender,
+    a.grade,
+    a.academy_name,
+    b.status
+    FROM
+    student_info a
+    LEFT JOIN predict_suspected_student b ON a.student_no = b.student_no
+    WHERE
+    b.status IS NOT NULL
+    AND a.`status` = '1'
+    ) AS c
+    UNION ALL
+    SELECT
+    *,
+    '3' AS lable
+    FROM
+    (
+    SELECT
+    a.student_no,
+    a.student_name,
+    a.college_code,
+    a.major_code,
+    a.class_name,
+    a.nation,
+    a.native_place,
+    a.gender,
+    a.grade,
+    a.academy_name,
+    b.support_type
+    FROM
+    student_info a
+    LEFT JOIN student_support_info b ON a.student_no = b.student_no
+    WHERE
+    b.support_type IS NOT NULL
+    AND a.`status` = '1'
+    ) AS c
+    UNION ALL
+    SELECT
+    *,
+    '4' AS lable
+    FROM
+    (
+    SELECT
+    a.student_no,
+    a.student_name,
+    a.college_code,
+    a.major_code,
+    a.class_name,
+    a.nation,
+    a.native_place,
+    a.gender,
+    a.grade,
+    a.academy_name,
+    b.support_type
+    FROM
+    student_info a
+    LEFT JOIN student_support_info b ON a.student_no = b.student_no
+    WHERE
+    b.support_type IS NULL
+    AND a.`status` = '1'
+    ) AS c
+    ) d
+    <where>
+      <if test="collegeCode!=null and collegeCode!=''">
+        and	d.college_code = #{collegeCode}
+      </if>
+      <if test="majorCode!=null and majorCode!=''">
+        and d.major_code = #{majorCode}
+      </if>
+      <if test="className!=null and className!=''">
+        and d.class_name = #{className}
+      </if>
+      <if test="nation!=null and nation!=''">
+        and d.nation = #{nation}
+      </if>
+      <if test="nativePlace!=null and nativePlace!=''">
+        and d.native_place = #{nativePlace}
+      </if>
+      <if test="gender!=null and gender!=''">
+        and d.gender = #{gender}
+      </if>
+      <if test="grade!=null and grade!=''">
+        and d.grade = #{grade}
+      </if>
+      <if test="academyName!=null and academyName!=''">
+        AND d.academy_name = #{academyName}
+      </if>
+    </where>
+    GROUP BY
+    d.student_no,
+    d.student_name
+  </select>
+
+  <select id="listSupportStudent" resultType="com.sunmnet.bigdata.web.model.entity.student.StudentSupportInfo"  parameterType="com.sunmnet.bigdata.web.model.entity.student.StudentSupportInfo" >
+    SELECT
+    support.id as id ,
+    support.student_no as studentNo ,
+    support.student_name as studentName ,
+    support.college_name as collegeName ,
+    support.college_code as collegeCode ,
+    support.major_name as majorName ,
+    support.major_code as majorCode ,
+    support.nation as nation ,
+    support.student_place as studentPlace ,
+    support.gender as gender ,
+    support.support_type as supportType ,
+    support.support_amount as supportAmount ,
+    support.grade as grade ,
+    support.school_year as schoolYear ,
+    support.school_term as schoolTerm ,
+    support.status as status ,
+    support.is_focus as isFocus ,
+    support.reason as reason
+    FROM
+      student_support_info support,
+      student_info base
+    WHERE support.student_no = base.student_no
+      AND support.status = '1'
+      AND support.school_year =
+      (
+        SELECT
+        MAX(school_year)
+        FROM
+        student_support_info
+      )
+      <if test="collegeCode!=null and collegeCode!=''">
+        and	support.college_code = #{collegeCode}
+      </if>
+      <if test="majorCode!=null and majorCode!=''">
+        and support.major_code = #{majorCode}
+      </if>
+      <if test="className!=null and className!=''">
+        and support.class_name = #{className}
+      </if>
+      <if test="nation!=null and nation!=''">
+        and support.nation = #{nation}
+      </if>
+      <if test="studentPlace!=null and studentPlace!=''">
+        and support.student_place = #{studentPlace}
+      </if>
+      <if test="gender!=null and gender!=''">
+        and support.gender = #{gender}
+      </if>
+      <if test="academyName!=null and academyName!=''">
+        AND support.academy_name = #{academyName}
+      </if>
+    order by support.grade desc
+  </select>
+
+  <update id="updateStudentSupportFocus" parameterType="com.sunmnet.bigdata.web.model.entity.student.StudentSupportInfo" >
+    UPDATE
+      student_support_info
+    SET
+      is_focus = #{isFocus,jdbcType=VARCHAR},
+      reason = #{reason,jdbcType=VARCHAR}
+    WHERE id = #{id,jdbcType=INTEGER}
+  </update>
+
+  <!--根据学号查询贫困生资助信息-->
+  <select id="getStudentSupportInfoByStudentNo" parameterType="String" resultType="com.sunmnet.bigdata.web.model.entity.student.StudentSupportInfo">
+    select DISTINCT student_no, student_name, college_name, college_code, major_name, major_code,
+    nation, student_place, gender
+  	  from student_support_info
+  	 where student_no = #{studentNo}
+  </select>
+</mapper>
+

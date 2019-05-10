@@ -1,0 +1,219 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+<mapper namespace="com.sunmnet.bigdata.web.dao.student.IStudentFriendDAO">
+<!--
+save
+update
+findOne
+findOneByProperty
+findOneByCondition
+delete
+deleteByCondition
+deleteByProperty
+findAll
+queryPage
+count
+-->
+
+  <select id="querySocialRelationList" resultType="Map"
+          parameterType="map">
+    SELECT *
+    FROM student_friend friend
+    JOIN student_info info on ON friend.student_no = info.student_no
+
+    select
+    stuNo,stuName,friendStuNo,friendName,socialNo,relationDegree
+    from social_relation_map social,student_info base
+    where base.student_number = social.stuNo and social.socialNo is not null and base.status = '1'
+    <if test="collegeCode != null">
+      and social.collegeCode=#{collegeCode}
+    </if>
+    <if test="majorCode != null">
+      and social.majorCode=#{majorCode}
+    </if>
+    <if test="className != null">
+      and social.className=#{className}
+    </if>
+    <if test="grade != null">
+      and social.grade=#{grade}
+    </if>
+    <if test="nation != null">
+      and social.nation=#{nation}
+    </if>
+    <if test="gender != null">
+      and social.gender=#{gender}
+    </if>
+    <if test="studentPlace != null">
+      and social.place=#{studentPlace}
+    </if>
+    <if test="academyName != null">
+      and social.academyName=#{academyName}
+    </if>
+  </select>
+
+  <select id="querySocialRelationListByStuNo" resultType="Map"
+          parameterType="String">
+    select * from social_relation_map social,student_info base
+    where base.student_number = social.stuNo and social.stuNo = #{stuNo} and base.status = '1' and
+    social.socialNo is not null and social.friendName is not null and
+    0 != (select count(*) from social_relation_map where socialNo is not
+    null and friendName is not null and stuNo in
+    (select friendStuNo from social_relation_map where stuNo = #{stuNo} and
+    socialNo is not null and friendName is not null))
+  </select>
+
+  <select id="getFriendRanking" resultType="Integer" parameterType="String">
+    SELECT
+      c.rowno
+    FROM
+      (SELECT
+        @rowno := @rowno + 1 AS rowno,
+        a.*
+      FROM
+        (SELECT
+          friend.student_no,
+          COUNT(DISTINCT friend.id) AS total
+        FROM
+          student_friend friend
+          JOIN student_info info
+            ON friend.`friend_student_no` = info.student_no
+          JOIN
+            (SELECT
+              *
+            FROM
+              student_info
+            WHERE student_no = #{studentNo}) student
+            ON info.class_name = student.class_name
+        GROUP BY friend.student_no
+        ORDER BY total
+        ) a,
+        (SELECT @rowno := 0) b) c
+          WHERE c.student_no  = #{studentNo}
+  </select>
+
+  <select id="getMaxFriendCount" resultType="Integer" parameterType="String">
+    SELECT
+    MAX(c.rowno)
+    FROM
+    (SELECT
+    @rowno := @rowno + 1 AS rowno,
+    a.*
+    FROM
+    (SELECT
+    friend.student_no,
+    COUNT(DISTINCT friend.id) AS total
+    FROM
+    student_friend friend
+    JOIN student_info info
+    ON friend.`friend_student_no` = info.student_no
+    JOIN
+    (SELECT
+    *
+    FROM
+    student_info
+    WHERE student_no = #{studentNo}) student
+    ON info.class_name = student.class_name
+    GROUP BY friend.student_no
+    ORDER BY total
+    ) a,
+    (SELECT @rowno := 0) b) c
+  </select>
+
+
+  <!-- 群体整体画像-社交关系人数统计 -->
+  <select id="countFriendByCategary" resultType="Map" parameterType="StudentInfoREQ">
+    SELECT
+      COUNT(*) AS total,
+      CASE
+      WHEN t.total > 6
+      THEN 'social_good'
+      WHEN t.total > 1
+      THEN 'social_normal'
+      ELSE 'social_bad'
+      END AS categary
+    FROM
+      (
+        SELECT
+          COUNT(*) AS total,
+          info.`student_no`
+        FROM student_friend friend
+        JOIN student_info info ON friend.`student_no` = info.`student_no`
+        <trim prefix="WHERE" prefixOverrides="AND | OR">
+          <if test="studentNo != null" >
+            and student_no = #{studentNo}
+          </if>
+          <if test="identityNo != null" >
+            and identity_no = #{identityNo}
+          </if>
+          <if test="name != null" >
+            and name = #{name}
+          </if>
+          <if test="gender != null" >
+            and gender = #{gender}
+          </if>
+          <if test="phone != null" >
+            and phone = #{phone}
+          </if>
+          <if test="email != null" >
+            and email = #{email}
+          </if>
+
+          <if test="nativePlace != null" >
+            and native_place = #{nativePlace}
+          </if>
+          <if test="politicalLandscape != null" >
+            and political_landscape = #{politicalLandscape}
+          </if>
+          <if test="examineeNo != null" >
+            and examinee_no = #{examineeNo}
+          </if>
+          <if test="schoolYear != null" >
+            and school_year = #{schoolYear}
+          </if>
+          <if test="graduatedSchool != null" >
+            and graduated_school = #{graduatedSchool}
+          </if>
+          <if test="academyName != null" >
+            and academy_name = #{academyName}
+          </if>
+          <if test="collegeName != null" >
+            and college_name = #{collegeName}
+          </if>
+          <if test="collegeCode != null" >
+            and college_code = #{collegeCode}
+          </if>
+          <if test="majorName != null" >
+            and major_name = #{majorName}
+          </if>
+          <if test="majorCode != null" >
+            and major_code = #{majorCode}
+          </if>
+          <if test="className != null" >
+            and class_name = #{className}
+          </if>
+          <if test="status != null" >
+            and status = #{status}
+          </if>
+          <if test="nation != null" >
+            and nation = #{nation}
+          </if>
+          <if test="birthday != null" >
+            and birthday = #{birthday}
+          </if>
+        </trim>
+        GROUP BY info.`student_no`
+      ) t
+    GROUP BY
+    CASE
+      WHEN t.total > 6
+      THEN 'social_good'
+      WHEN t.total > 1
+      THEN 'social_normal'
+      ELSE 'social_bad'
+      END
+  </select>
+
+</mapper>
+

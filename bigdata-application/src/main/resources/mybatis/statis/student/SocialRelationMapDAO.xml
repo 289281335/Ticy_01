@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.sunmnet.bigdata.web.dao.student.ISocialRelationMapDAO">
+
+	<select id="listSocialRelation" resultType="com.sunmnet.bigdata.web.model.entity.student.SocialRelationMap"
+		parameterType="map">
+		select
+		social.student_no,student_name,friend_stuNo,friend_name,social_no,relation_degree
+		from social_relation_map social,student_info base
+		where base.student_no = social.student_no and social.social_no is not null and base.status = '1'
+		<if test="collegeCode != null">
+			and social.college_code=#{collegeCode}
+		</if>
+		<if test="majorCode != null">
+			and social.major_code=#{majorCode}
+		</if>
+		<if test="className != null">
+			and social.class_name=#{className}
+		</if>
+		<if test="grade != null">
+			and social.grade=#{grade}
+		</if>
+		<if test="nation != null">
+			and social.nation=#{nation}
+		</if>
+		<if test="gender != null">
+			and social.gender=#{gender}
+		</if>
+		<if test="nativePlace != null">
+			and social.native_place=#{nativePlace}
+		</if>
+		<if test="academyName != null">
+			and social.academy_name=#{academyName}
+		</if>
+	</select>
+	<select id="listSocialRelationByStuNo" resultType="com.sunmnet.bigdata.web.model.entity.student.SocialRelationMap"
+		parameterType="String">
+		select * from social_relation_map social,student_info base
+		where base.student_no = social.student_no and social.student_no = #{studentNo} and base.status = '1' and
+		social.social_no is not null and social.friend_name is not null and
+		0 != (select count(*) from social_relation_map where social_no is not
+		null and friend_name is not null and student_no in
+		(select friend_stuNo from social_relation_map where student_no = #{studentNo} and
+		social_no is not null and friend_name is not null))
+	</select>
+</mapper>

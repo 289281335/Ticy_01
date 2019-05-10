@@ -1,0 +1,218 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.sunmnet.bigdata.web.dao.student.IStudentRelationInfoDAO">
+	
+	<select id="getStudentInfo" resultType="com.sunmnet.bigdata.web.model.entity.student.StudentInfo" parameterType="String">
+		select * from student_info where student_no = #{studentNo}
+	</select>
+
+	<select id="getNetTimeLocaltionbyStudentNo" resultType="com.sunmnet.bigdata.web.model.entity.student.SchoolLongitude" parameterType="String">
+		select * from school_position where localtion = (select
+		distinct(building_code)
+		from student_dormitory where student_no = #{studentNo})
+	</select>
+
+	<!-- 获得朋友数超过同专业人的百分比    有报错-->
+	<select id="getFriendCountVSclassTotal" resultType="java.math.BigDecimal"
+		parameterType="String">
+		select
+		(select count(*) from
+		(
+		select count(*) as an from
+		student_friend where student_no in (
+		select sf.friend_student_no from
+		student_friend sf,student_info si
+		where sf.student_no =
+		si.student_no and si.class_name=
+		(
+		select distinct(class_name)
+		from student_friend sf,student_info si
+		where sf.student_no =
+		si.student_no and
+		si.student_no=#{studentNo}
+		)
+		)group by student_no
+		)
+		as sn where an <![CDATA[ < ]]>(select
+		count(*) from student_friend where
+		student_no = #{studentNo})
+		)
+		/
+		(
+		select
+		count(*) from
+		(
+		select count(*) as an from student_friend where
+		student_no in (
+		select rel.friend_stuNum from student_friend
+		sf,student_info si
+		where sf.student_no = si.student_no and
+		si.class_name=
+		(
+		select distinct(class_name) from
+		student_friend sf,student_info si
+		where sf.student_no =
+		si.student_no and
+		si.student_no=#{studentNo}
+		)
+		)group by student_no
+		)
+		as sn
+		) as con
+		from dual
+	</select>
+	
+	<!-- 群体整体画像-社交关系人数统计   有报错-->
+	<select id="countGroupTotal" resultType="java.util.HashMap"
+		parameterType="com.sunmnet.bigdata.web.model.request.student.WholePortraitREQ">
+		select
+		(select count(*) as social_bad from (select count(*) as c from
+		student_friend sf,student_info si
+		where sf.student_no = si.student_no
+		<if test="collegeCode != null">
+			and si.college_code=#{collegeCode}
+		</if>
+		<if test="majorCode != null">
+			and si.major_code=#{majorCode}
+		</if>
+		<if test="className != null">
+			and si.class_name=#{className}
+		</if>
+		<if test="nation != null">
+			and si.nation=#{nation}
+		</if>
+		<if test="gender != null">
+			and si.gender=#{gender}
+		</if>
+		<if test="nativePlace != null">
+			and si.native_place=#{nativePlace}
+		</if>
+		<if test="academyName != null">
+			and si.academy_name=#{academyName}
+		</if>
+		group by sf.studentNo) as sn where sn.c = 1)
+		as social_bad,
+		(select count(*) as social_bad from (select count(*) as c from
+		student_friend sf,student_info si
+		where sf.student_no = si.student_no
+		<if test="collegeCode != null">
+			and si.college_code=#{collegeCode}
+		</if>
+		<if test="majorCode != null">
+			and si.major_code=#{majorCode}
+		</if>
+		<if test="className != null">
+			and si.class_name=#{className}
+		</if>
+		<if test="nation != null">
+			and si.nation=#{nation}
+		</if>
+		<if test="gender != null">
+			and si.gender=#{gender}
+		</if>
+		<if test="nativePlace != null">
+			and si.native_place=#{nativePlace}
+		</if>
+		<if test="academyName != null">
+			and si.academy_name=#{academyName}
+		</if>
+		group by sf.student_no) as sn where sn.c between 1 and 3)
+		as social_normal,
+		(select count(*) as social_bad from (select count(*) as c from
+		student_friend sf,student_info si
+		where sf.student_no = si.student_no
+		<if test="collegeCode != null">
+			and si.college_code=#{collegeCode}
+		</if>
+		<if test="majorCode != null">
+			and si.major_code=#{majorCode}
+		</if>
+		<if test="className != null">
+			and si.class_name=#{className}
+		</if>
+		<if test="nation != null">
+			and si.nation=#{nation}
+		</if>
+		<if test="gender != null">
+			and si.gender=#{gender}
+		</if>
+		<if test="nativePlace != null">
+			and si.native_place=#{nativePlace}
+		</if>
+		<if test="academyName != null">
+			and si.academy_name=#{academyName}
+		</if>
+		group by sf.student_no) as sn where sn.c > 6)
+		as social_good
+        from dual
+	</select>
+	
+	<select id="countBoyAndGirl" resultType="java.util.HashMap"
+		parameterType="com.sunmnet.bigdata.web.model.request.student.WholePortraitREQ">
+		select 
+		(select count(*) from student_info si where si.gender = '男'
+		<if test="collegeCode != null">
+			and si.college_code=#{collegeCode}
+		</if>
+		<if test="majorCode != null">
+			and si.major_code=#{majorCode}
+		</if>
+		<if test="className != null">
+			and si.class_name=#{className}
+		</if>
+		<if test="nation != null">
+			and si.nation=#{nation}
+		</if>
+		<if test="gender != null">
+			and si.gender=#{gender}
+		</if>
+		<if test="nativePlace != null">
+			and si.native_place=#{nativePlace}
+		</if>
+		<if test="academyName != null">
+			and si.academy_name=#{academyName}
+		</if>
+		) as boy, 
+		(select count(*) from student_info si where si.gender = '女'
+		<if test="collegeCode != null">
+			and si.college_code=#{collegeCode}
+		</if>
+		<if test="majorCode != null">
+			and si.major_code=#{majorCode}
+		</if>
+		<if test="className != null">
+			and si.class_name=#{className}
+		</if>
+		<if test="nation != null">
+			and si.nation=#{nation}
+		</if>
+		<if test="gender != null">
+			and si.gender=#{gender}
+		</if>
+		<if test="nativePlace != null">
+			and si.native_place=#{nativePlace}
+		</if>
+		<if test="academyName != null">
+			and si.academy_name=#{academyName}
+		</if>
+		) as girl
+		from 
+		dual
+	</select>
+	
+	<select id="countSocialsByStudentNo" resultType="Integer"
+		parameterType="String">
+		select count(social_No) As A from social_node_info where student_no = #{studentNo}
+	</select>
+	
+	<select id="getSocialEntropyByStudentNo" resultType="java.math.BigDecimal"
+		parameterType="String">
+		select friend_entropy from social_friend_entropy where student_no = #{studentNo}
+	</select>
+	
+	<select id="countXBFriendsByStudentNo" resultType="int"
+		parameterType="String">
+		select count(*) from social_relation_map  where student_no = #{studentNo} and friend_ISXB = '1'
+	</select>
+	
+</mapper>

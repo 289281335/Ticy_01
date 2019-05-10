@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.sunmnet.bigdata.web.dao.student.IStudentGraduationTargetDAO" >
+
+    <select id="selectByPrimaryKey" resultType="com.sunmnet.bigdata.web.model.entity.student.StudentGraduationTarget" parameterType="java.lang.Long" >
+        select 
+        id, student_no, arget_type, school_code,industry_code,position_code,create_time, modify_time
+        from student_graduation_target
+        where id = #{id,jdbcType=BIGINT}
+    </select>
+    
+    <!--查询成长目标设定根据学号-->
+    <select id="getStudentArgetInfoByStudentNo" resultType="com.sunmnet.bigdata.web.model.entity.student.StudentGraduationTarget" parameterType="java.lang.String" >
+        select 
+        id, student_no, arget_type, school_code,industry_code,position_code,create_time, modify_time
+        from student_graduation_target
+        where student_no = #{studentNo,jdbcType=VARCHAR}
+    </select>
+
+    <!--查询成长目标设定List根据学号-->
+    <select id="listStudentArgetInfoByStudentNo" resultType="com.sunmnet.bigdata.web.model.entity.student.StudentGraduationTarget" parameterType="java.lang.String" >
+        select
+        id, student_no, arget_type, school_code,industry_code,position_code,create_time, modify_time
+        from student_graduation_target
+        where student_no = #{studentNo,jdbcType=VARCHAR}
+    </select>
+
+    <!--根据序学号,查询学生读研类成长目标-->
+    <select id="getStudentArgetReadInfoByStudentNo" resultType="java.lang.String" parameterType="java.lang.String" >
+        select school_code from student_graduation_target
+        where student_no = #{studentNo,jdbcType=VARCHAR}
+    </select>
+    
+
+    <insert id="insertSelective" parameterType="com.sunmnet.bigdata.web.model.entity.student.StudentGraduationTarget" >
+        insert into student_graduation_target
+        <trim prefix="(" suffix=")" suffixOverrides="," >
+            <if test="id != null" >
+                id,
+            </if>
+            <if test="studentNo != null" >
+                student_no,
+            </if>
+            <if test="argetType != null" >
+                arget_type,
+            </if>
+            <if test="schoolCode != null" >
+                school_code,
+            </if>
+            <if test="industryCode != null" >
+                industry_code,
+            </if>
+            <if test="positionCode != null" >
+                position_code,
+            </if>
+            <if test="createTime != null" >
+                create_time,
+            </if>
+            <if test="modifyTime != null" >
+                modify_time,
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides="," >
+            <if test="id != null" >
+                #{id,jdbcType=BIGINT},
+            </if>
+            <if test="studentNo != null" >
+                #{studentNo,jdbcType=VARCHAR},
+            </if>
+            <if test="argetType != null" >
+                #{argetType,jdbcType=VARCHAR},
+            </if>
+            <if test="schoolCode != null" >
+                #{schoolCode,jdbcType=VARCHAR},
+            </if>
+            <if test="industryCode != null" >
+                #{industryCode,jdbcType=VARCHAR},
+            </if>
+            <if test="positionCode != null" >
+                #{positionCode,jdbcType=VARCHAR},
+            </if>
+            <if test="createTime != null" >
+                #{createTime,jdbcType=VARCHAR},
+            </if>
+            <if test="modifyTime != null" >
+                #{modifyTime,jdbcType=VARCHAR},
+            </if>
+        </trim>
+    </insert>
+
+    <update id="updateByPrimaryKeySelective" parameterType="com.sunmnet.bigdata.web.model.entity.student.StudentGraduationTarget" >
+        update student_graduation_target
+        <set >
+            <if test="studentNo != null" >
+                student_no = #{studentNo,jdbcType=VARCHAR},
+            </if>
+            <if test="argetType != null" >
+                arget_type = #{argetType,jdbcType=VARCHAR},
+            </if>
+            <if test="schoolCode != null" >
+                school_code = #{schoolCode,jdbcType=VARCHAR},
+            </if>
+            <if test="industryCode != null" >
+                industry_code = #{industryCode,jdbcType=VARCHAR},
+            </if>
+            <if test="positionCode != null" >
+                position_code = #{positionCode,jdbcType=VARCHAR},
+            </if>
+            <if test="createTime != null" >
+                create_time = #{createTime,jdbcType=VARCHAR},
+            </if>
+            <if test="modifyTime != null" >
+                modify_time = #{modifyTime,jdbcType=VARCHAR},
+            </if>
+        </set>
+        where id = #{id,jdbcType=BIGINT}
+    </update>
+
+    <delete id="deleteByPrimaryKey" parameterType="java.lang.Long" >
+        delete from student_graduation_target
+        where id = #{id,jdbcType=BIGINT}
+    </delete>
+
+    <!-- 删除原有的目标标签，根据序学号 -->
+    <delete id="deleteByStudentNo" parameterType="java.lang.String" >
+        delete from student_graduation_target
+        where student_no = #{studentNo,jdbcType=VARCHAR}
+    </delete>
+</mapper>

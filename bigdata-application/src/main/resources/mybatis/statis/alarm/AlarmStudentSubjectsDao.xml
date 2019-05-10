@@ -1,0 +1,276 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+<mapper namespace="com.sunmnet.bigdata.web.dao.alarm.IAlarmStudentSubjectsDAO">
+<!--
+save
+update
+findOne
+findOneByProperty
+findOneByCondition
+delete
+deleteByCondition
+deleteByProperty
+findAll
+queryPage
+count
+-->
+
+
+
+  <sql id="Base_Column_List">
+    student_no as studentNo ,
+    subjects_count as subjectsCount ,
+    deal_flag as dealFlag ,
+    alarm_content as alarmContent ,
+    alarm_type as alarmType ,
+    alarm_date as alarmDate ,
+    deal_result as dealResult ,
+    deal_date as dealDate
+  </sql>
+
+  <select id="countSubjectWarning" parameterType="StudentInfoREQ" resultType="java.lang.Integer">
+    SELECT
+    COUNT(1) AS subjectWarning
+    FROM
+    (
+    SELECT
+    a.alarm_date,
+    si.student_no,
+    si.college_code,
+    si.major_code,
+    si.academy_name,
+    si.class_name,
+    si.school_year,
+    si.gender,
+    si.nation,
+    si.native_place
+    FROM
+    alarm_student_subjects a,
+    student_info si
+    WHERE
+    a.student_no = si.student_no
+    ) d
+    WHERE 1=1
+    <if test="collegeCode!=null and collegeCode!=''">
+      AND d.college_code = #{collegeCode}
+    </if>
+    <if test="majorCode!=null and majorCode!=''">
+      AND d.major_code = #{majorCode}
+    </if>
+    <if test="schoolYear!=null and schoolYear!=''">
+      AND substring(d.alarm_date,1,4) = #{schoolYear}
+    </if>
+    <if test="gender!=null and gender!=''">
+      AND d.gender = #{gender}
+    </if>
+    <if test="academyName!=null and academyName!=''">
+      AND d.academy_name = #{academyName}
+    </if>
+    <if test="className!=null and className!=''">
+      AND d.class_name = #{className}
+    </if>
+    <if test="nation!=null and nation!=''">
+      AND d.nation = #{nation}
+    </if>
+    <if test="nativePlace!=null and nativePlace!=''">
+      AND d.native_place = #{nativePlace}
+    </if>
+    UNION ALL
+    SELECT
+    count(1) as escapeWarning
+    from view_truancy_warning b
+    WHERE SUBSTRING(b.warning_date,1,7) BETWEEN #{startTime} and #{endTime}
+    <if test="collegeCode!=null and collegeCode!=''">
+      AND b.college_code = #{collegeCode}
+    </if>
+    <if test="majorCode!=null and majorCode!=''">
+      AND b.major_code = #{majorCode}
+    </if>
+    <if test="schoolYear!=null and schoolYear!=''">
+      AND substring(b.warning_date,1,4) = #{schoolYear}
+    </if>
+    <if test="gender!=null and gender!=''">
+      AND b.gender = #{gender}
+    </if>
+    <if test="academyName!=null and academyName!=''">
+      AND b.academy_name = #{academyName}
+    </if>
+    <if test="className!=null and className!=''">
+      AND b.class_name = #{className}
+    </if>
+    <if test="nation!=null and nation!=''">
+      AND b.nation = #{nation}
+    </if>
+    <if test="nativePlace!=null and nativePlace!=''">
+      AND b.student_place = #{studentPlace}
+    </if>
+  </select>
+
+
+  <select id="recentlyEarlyFailWarning" resultType="java.lang.Integer">
+  <![CDATA[
+          SELECT COUNT( 1 ) FROM
+              (SELECT a.student_no AS student_no,si.name AS student_name,
+                  si.college_code AS college_code,si.college_name AS college_name,si.major_code AS major_code,
+                  si.major_name AS major_name,si.gender AS gender,si.school_year AS school_year,
+                  CONCAT ( '本学期可能挂科', a.subjects_count, '门课程' ) AS warning_content,a.alarm_date AS warning_date,
+                  '挂科预警' AS warning_type,
+              CASE WHEN ( a.subjects_count >= 10 ) THEN '严重'
+                   WHEN ( a.subjects_count < 10 AND a.subjects_count >= 8 ) THEN '较重'
+                   WHEN ( a.subjects_count < 8 AND a.subjects_count >= 5 ) THEN '一般' ELSE '轻微'
+              END AS alarm_level,
+              CASE WHEN a.deal_flag = '0' THEN '未处理' ELSE '已处理'
+              END AS deal_flag
+              FROM alarm_student_subjects a,student_info si
+              WHERE a.student_no = si.student_no AND a.deal_flag = '0'
+              GROUP BY a.student_no,si.name,si.college_code,si.college_name,si.college_name,si.major_code,
+              si.major_name,si.gender,si.school_year,a.subjects_count,a.alarm_date,a.alarm_type,alarm_level,deal_flag) ta
+  ]]>
+</select>
+
+    <select id="recentlyTruancy" resultType="java.lang.Integer">
+      <![CDATA[
+		    SELECT count( 1 ) from view_truancy_warning
+		    where substring(warning_date, 1, 10 ) > DATE_SUB( CURDATE( ), INTERVAL 1 MONTH )
+	  ]]>
+    </select>
+
+
+
+    <select id="failWarningOfMonth" resultType="java.lang.String">
+      SELECT times FROM (
+      SELECT
+      SUBSTRING( c.warning_date, 1, 7 ) AS course_date,
+      COUNT( c.truancy_times ) AS times
+      FROM
+      alarm_student_truancy c
+      WHERE
+      SUBSTRING( c.warning_date, 1, 10 ) > DATE_SUB( CURDATE( ), INTERVAL 1 YEAR )
+      GROUP BY
+      SUBSTRING( c.warning_date, 1, 7 )
+      ) a WHERE a.course_date = SUBSTRING(NOW(),1,7)
+    </select>
+
+    <select id="failWarningOfLastMonth" resultType="java.lang.String">
+      select times from (
+      SELECT
+      substring( c.warning_date, 1, 7 ) AS course_date,
+      count( c.truancy_times ) AS times
+      FROM
+      alarm_student_truancy c
+      WHERE
+      SUBSTRING( c.warning_date, 1, 10 ) > DATE_SUB( CURDATE( ), INTERVAL 1 YEAR )
+      GROUP BY
+      substring( c.warning_date, 1, 7 )
+      ) a where a.course_date = substring(DATE_SUB(CURDATE(), INTERVAL 1 MONTH),1,7)
+    </select>
+
+    <select id="failWarningOfYear" resultType="java.lang.String">
+      select round(sum(a.times)/12,0) as times from (
+      SELECT
+      substring( c.warning_date, 1, 7 ) AS course_date,
+      count( c.truancy_times ) AS times
+      FROM
+      alarm_student_truancy c
+      WHERE
+      SUBSTRING( c.warning_date, 1, 10 ) > DATE_SUB( CURDATE( ), INTERVAL 1 YEAR )
+      GROUP BY
+      substring( c.warning_date, 1, 7 )
+      ) a
+    </select>
+
+    <select id="maxFailWarning" resultType="java.lang.String">
+      SELECT course_date FROM	(
+      SELECT
+      SUBSTRING( c.warning_date, 1, 7 ) AS course_date,
+      COUNT( c.truancy_times ) AS times
+      FROM
+      alarm_student_truancy c
+      WHERE
+      SUBSTRING( c.warning_date, 1, 10 ) > DATE_SUB( CURDATE( ), INTERVAL 1 YEAR )
+      GROUP BY
+      SUBSTRING( c.warning_date, 1, 7 )
+      ) a
+      WHERE a.times = (
+      SELECT MAX( CAST( b.times AS SIGNED INTEGER ) ) AS times FROM (
+      SELECT
+      SUBSTRING( c.warning_date, 1, 7 ) AS course_date,
+      COUNT( c.truancy_times ) AS times
+      FROM
+      alarm_student_truancy c
+      WHERE
+      SUBSTRING( c.warning_date, 1, 10 ) > DATE_SUB( CURDATE( ), INTERVAL 1 YEAR )
+      GROUP BY
+      SUBSTRING( c.warning_date, 1, 7 )
+      ) b )
+    </select>
+  <!--逃课挂科-->
+  <select id="pageTruancySubjectsWaring" resultType="Map" parameterType="java.lang.String">
+   <![CDATA[
+    SELECT
+        w.student_no AS studentNo,
+        w.student_name AS studentName,
+        w.college_name AS collegeName,
+        substring(w.warning_date,1,19) AS warningDate,
+        w.warning_type AS warningType,
+        w.warning_level AS warningLevel,
+        w.deal_flag AS dealFlag,
+        w.warning_content AS warningContent
+    FROM
+     (
+        SELECT
+            student_no,
+            name,
+            college_name,
+            gender,
+            substring(alarm_date,1,19) as alarm_date,
+            alarm_type,
+            warning_level,
+            deal_flag,
+			subjects_count,
+            alarm_content,
+            deal_result
+        from view_subjects_warning where deal_flag = '未处理'
+        union all
+        SELECT
+            student_no,
+            student_name as name,
+            college_name,
+            gender,
+            substring(warning_date,1,19) as alarm_date,
+            warning_type as alarm_type,
+            warning_level,
+            deal_flag,
+            result_comment as subjects_count,
+            result_warning as deal_result,
+            warning_content as alarm_content
+        from view_truancy_warning where substring(warning_date, 1, 10 ) > DATE_SUB( CURDATE( ), INTERVAL 1 MONTH ) and deal_flag = '未处理'
+     ) w
+     where 1=1
+    ]]>
+      <if test="warningType!=null and warningType!=''">
+        and w.warning_type = #{warningType}
+      </if>
+      <if test="warningLevel!=null and warningLevel!=''">
+        and w.warning_level = #{warningLevel}
+      </if>
+      <if test="studentName!=null and studentName!=''">
+        and w.student_name = #{studentName}
+      </if>
+      <if test="majorName!=null and majorName!=''">
+        and w.college_name = #{majorName}
+      </if>
+      <if test="warningDate!=null and warningDate!=''">
+        and substring(w.warning_date,1,19) = #{warningDate}
+      </if>
+      order by w.warning_date,w.student_no desc
+</select>
+<!--修改挂科预警标识 updateSubjectsWarning-->
+  <update id="updateSubjectsWarning" parameterType="String" >
+    update alarm_student_subjects set deal_flag = '1',deal_date = now(), alarm_content=#{reason}, deal_result=#{remark} where student_no = #{studentNo} and alarm_date = #{alarmDate}
+  </update>
+
+</mapper>
+

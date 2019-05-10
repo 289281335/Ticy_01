@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.sunmnet.bigdata.web.dao.student.IStudentTruancyRecordDAO" >
+  
+  <!-- 查询本学期逃课信息 -->
+  <select id="selectTruancyRecordByStudentNo" resultType="StudentTruancyRecord" parameterType="String" >
+  <![CDATA[
+	SELECT
+		st.*
+	FROM
+		student_truancy st
+	WHERE
+          st.student_no = #{studentNo}
+    ORDER BY st.course_name desc
+    ]]>
+  </select>
+  
+  <!-- 查询学生疑似逃课信息 -->
+  <select id="countTruancyByCondition" resultType="map" parameterType="com.sunmnet.bigdata.web.model.request.student.WholePortraitREQ">
+	SELECT
+		m.truancy_times as truancyTime,
+		count(*) as totalCount
+	FROM
+	    (SELECT
+			st.student_no,
+			count(st.student_no) as truancyTimes
+		FROM
+			student_truancy st,
+			student_info si
+		WHERE 
+		    st.student_no = si.student_no
+		 <if test="academyName != null and academyName != ''" >
+            and si.academy_name = #{academyName}
+         </if>
+		 <if test="collegeCode != null and collegeCode != ''" >
+            and si.college_code = #{collegeCode}
+         </if>
+         <if test="majorCode != null and majorCode != ''" >
+            and si.major_code = #{majorCode}
+         </if>
+         <if test="className != null and className != ''" >
+            and si.class_name = #{className}
+         </if>
+         <if test="nation != null and nation != ''" >
+            and si.nation = #{nation}
+         </if>
+         <if test="gender != null and gender != ''" >
+            and si.gender = #{gender}
+         </if>
+         <if test="nativePlace != null and nativePlace != ''" >
+            and si.native_place = #{nativePlace}
+         </if>
+         <if test="courseStartDate != null and courseStartDate != ''" >
+          	 <![CDATA[ and st.course_start_date >= #{courseStartDate} ]]>
+         </if>
+         <if test="courseEndDate != null and courseEndDate != ''" >
+          	 <![CDATA[ and st.course_end_date <= #{courseEndDate} ]]>
+         </if>
+		GROUP BY
+		    st.student_no
+		) m
+	GROUP BY
+		m.truancyTimes
+	ORDER BY
+        m.truancyTimes
+  </select>
+  
+  <!-- 查询意思旷课学生信息 -->
+  <select id="selectTruancyStudentByCondition" resultType="map" parameterType="com.sunmnet.bigdata.web.model.request.student.WholePortraitREQ">
+	   SELECT
+			si.student_no as studentNo,
+			si.name as name,
+			count(si.student_no) as truancyTimes
+		FROM
+			student_truancy st,
+			student_info si
+		WHERE 
+		    st.student_no = si.student_no
+		 <if test="academyName != null and academyName != ''" >
+            and si.academy_name = #{academyName}
+         </if>
+		 <if test="collegeCode != null and collegeCode != ''" >
+            and si.college_code = #{collegeCode}
+         </if>
+         <if test="majorCode != null and majorCode != ''" >
+            and si.major_code = #{majorCode}
+         </if>
+         <if test="className != null and className != ''" >
+            and si.class_name = #{className}
+         </if>
+         <if test="nation != null and nation != ''" >
+            and si.nation = #{nation}
+         </if>
+         <if test="gender != null and gender != ''" >
+            and si.gender = #{gender}
+         </if>
+         <if test="nativePlace != null and nativePlace != ''" >
+            and si.native_place = #{nativePlace}
+         </if>
+         <if test="courseStartDate != null and courseStartDate != ''" >
+          	 <![CDATA[ and st.course_start_date >= #{courseStartDate} ]]>
+         </if>
+         <if test="courseEndDate != null and courseEndDate != ''" >
+          	 <![CDATA[ and st.course_end_date <= #{courseEndDate} ]]>
+         </if>
+		GROUP BY
+		    si.student_n,
+		    si.name
+	    ORDER BY truancyTimes desc
+  </select>
+</mapper>

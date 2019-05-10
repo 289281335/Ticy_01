@@ -1,0 +1,206 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+<mapper namespace="com.sunmnet.bigdata.web.dao.behavior.IBehaviorStudentTracesDAO">
+<!--
+save
+update
+findOne
+findOneByProperty
+findOneByCondition
+delete
+deleteByCondition
+deleteByProperty
+findAll
+queryPage
+count
+-->
+
+  <!-- 根据条件查询学生信息 -->
+  <select id="listStudentTraces" resultType="StudentTracesRES" parameterType="StudentInfoREQ">
+    SELECT
+    id as id ,
+    student_no as studentNo ,
+    substr(card_date, 1,19) as cardDate ,
+    card_place as cardPlace ,
+    card_behavior as cardBehavior ,
+    course_name as courseName ,
+    course_start_date as courseStartDate ,
+    course_end_date as courseEndDate
+    FROM
+    behavior_student_traces
+    <trim prefix="WHERE" prefixOverrides="AND | OR">
+      <if test="studentTracesREQ.studentNo != null" >
+        and student_no = #{studentTracesREQ.studentNo}
+      </if>
+      <if test="studentTracesREQ.startDate != null" >
+        SUBSTR(card_date, 1,10) >= #{studentTracesREQ.startDate}
+      </if>
+
+      <if test="studentTracesREQ.studentNo != null" >
+        and #{endDate} >= SUBSTR(r.card_date, 1,10)
+      </if>
+    </trim>
+
+    <if test="sort!=null">
+      order by ${sort.toString().replace(":","")}
+    </if>
+    --limit #{beginNum},#{endNum}
+
+  </select>
+
+  <!-- 人群行为轨迹查询-刷卡 未启用-->
+  <select id="listBehaviorTrackByCard">
+
+  </select>
+
+  <!-- 人群行为轨迹查询-上网 -->
+  <select id="listBehaviorTrackByNet" parameterType="com.sunmnet.bigdata.web.model.request.behavior.BehaviorStudentLabelREQ" resultType="com.sunmnet.bigdata.web.model.entity.behavior.BehaviorTrackPosition">
+    SELECT DISTINCT si.student_no,r.`latitude`,r.`longitude`  FROM behavior_group_label AS t
+    LEFT JOIN behavior_label_vs_student AS vs ON t.`label_name` = vs.`label_name`
+    LEFT JOIN student_info AS si ON vs.`student_no` = si.`student_no`
+    LEFT JOIN studet_surf_log_record AS r ON r.`student_no` = si.`student_no`
+    <trim prefix="WHERE" prefixOverrides="AND | OR">
+      <if test="timePoint != null and timePoint != ''" >
+        and #{timePoint} BETWEEN r.surf_start_time and r.surf_end_time
+      </if>
+      <if test="studentNo != null and studentNo != ''" >
+        and si.student_no = #{studentNo}
+      </if>
+      <if test="collegeName != null and collegeName != ''" >
+        and si.college_name = #{collegeName}
+      </if>
+      <if test="majorName != null and majorName != ''" >
+        and si.major_name = #{majorName}
+      </if>
+      <if test="schoolYear != null and schoolYear != ''" >
+        and si.school_year = #{schoolYear}
+      </if>
+      <if test="nation != null and nation != ''" >
+        and si.nation = #{nation}
+      </if>
+      <if test="gender != null and gender != ''" >
+        and si.gender = #{gender}
+      </if>
+      <if test="degree != null and degree != ''" >
+        and si.degree = #{degree}
+      </if>
+      <if test="nativePlace != null and nativePlace != ''" >
+        and si.native_place = #{nativePlace}
+      </if>
+      <if test="labelName != null and labelName != ''" >
+        and t.label_name = #{labelName}
+      </if>
+    </trim>
+    and si.status = '1'
+  </select>
+
+  <!-- 重点人群管理-根据条件查询学生信息列表 -->
+  <select id="pageStudentInfoByCondition" parameterType="com.sunmnet.bigdata.web.model.request.behavior.PageBehaviorStudentLabelREQ" resultType="com.sunmnet.bigdata.web.model.response.student.StudentInfoRES">
+      select distinct t.college_name,t.major_name,t.school_year,t.student_no,
+             t.name,t.nation,t.gender,t.native_place,t.degree from student_info as t
+                 left join predict_suspected_student as s on t.`student_no` = s.`student_no`
+                 <trim prefix="WHERE" prefixOverrides="AND | OR">
+                   <if test="collegeName != null and collegeName != ''">
+                      t.college_name = #{collegeName}
+                   </if>
+                   <if test="majorName != null and majorName != ''">
+                      t.major_name = #{majorName}
+                   </if>
+                   <if test="schoolYear != null and schoolYear != ''">
+                      t.school_year = #{schoolYear}
+                   </if>
+                   <if test="nation != null and nation != ''">
+                      t.nation = #{nation}
+                   </if>
+                   <if test="studentNo != null and studentNo != ''">
+                      t.student_no = #{studentNo}
+                   </if>
+                   <if test="poolLevel != null and poolLevel != ''">
+                      s.poverty_level = #{poolLevel}
+                   </if>
+                   <if test="gender != null and gender != ''">
+                      t.gender = #{gender}
+                   </if>
+                   <if test="degree != null and degree != ''">
+                      t.degree = #{degree}
+                   </if>
+                   <if test="nativePlace != null and nativePlace != ''">
+                      t.native_place = #{nativePlace}
+                   </if>
+                 </trim>
+                   AND t.status = '1'
+                   GROUP BY t.student_no
+                 --limit #{beginNum},#{endNum}
+  </select>
+
+  <!-- 重点人群管理-查询群体标签列表 -->
+  <select id="listGroupLabel" resultType="String">
+       SELECT label_name FROM behavior_group_label ORDER BY create_time DESC limit 10
+  </select>
+
+  <!-- 重点人群管理-根据标签查询学生列表 -->
+  <select id="pageStudentInfoByLabel" parameterType="String" resultType="com.sunmnet.bigdata.web.model.response.student.StudentInfoRES">
+        SELECT DISTINCT t.college_name,t.major_name,t.school_year,t.student_no,t.name,
+               t.nation,t.gender,t.native_place,t.degree FROM student_info AS t
+                 LEFT JOIN predict_suspected_student AS p ON t.`student_no` = p.`student_no`
+                 LEFT JOIN behavior_label_vs_student AS bl ON bl.`student_no` = p.`student_no`
+                 LEFT JOIN behavior_group_label AS bg ON bg.`label_name` = bl.`label_name`
+                 WHERE bg.`label_name` = #{labelName}
+                 AND bg.`status` = 1
+                 AND t.`status` = '1'
+                 GROUP BY t.student_no
+                 --limit #{beginNum},#{endNum}
+  </select>
+
+  <!-- 重点人群管理-根据标签查询标签信息 -->
+  <select id="getLabelInfoByLabel" parameterType="String" resultType="Map">
+        SELECT label_name,label_describe from behavior_group_label WHERE status = 1
+  </select>
+
+  <!-- 重点人群管理-创建新群体标签并添加学生-添加标签信息 -->
+  <insert id="saveGroupLabel">
+        INSERT INTO behavior_group_label
+           (label_name,label_describe,create_time,status)
+             VALUES (#{labelName},#{labelDescribe},date_format(now(),'%Y-%m-%d %H:%i:%S'),1)
+  </insert>
+
+  <!-- 重点人群管理-创建新群体标签并添加学生-添加标签对应学号 -->
+  <insert id="saveStudent">
+       INSERT INTO behavior_label_vs_student
+             (label_name,student_no)
+               VALUES
+                 <foreach item="studentNo" collection="list" index="index" separator=",">
+                   (
+                      #{labelName},
+                      #{studentNo}
+                   )
+                 </foreach>
+  </insert>
+
+  <!-- 重点人群管理-修改群体标签和学生-修改标签信息 -->
+  <update id="updateGroupLabel">
+       UPDATE behavior_group_label
+          SET label_name = #{labelName},
+              label_describe = #{labelDescribe},
+              update_time = date_format(now(),'%Y-%m-%d %H:%i:%S')
+                WHERE label_name = #{labelName}
+  </update>
+
+  <!-- 重点人群管理-修改群体标签和学生-删除标签对应学号 -->
+  <delete id="deleteStudent" parameterType="String">
+         DELETE FROM  behavior_label_vs_student
+             WHERE label_name = #{labelName}
+  </delete>
+
+  <!-- 重点人群管理-删除标签 -->
+  <update id="deleteGroupLabel" parameterType="String">
+       UPDATE behavior_group_label
+          set status = 0,
+              delete_time = date_format(now(),'%Y-%m-%d %H:%i:%S')
+              WHERE label_name = #{labelName}
+  </update>
+
+</mapper>
+

@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.sunmnet.bigdata.web.dao.student.IPovertyStudentAnalyseDAO">
+
+	<select id="countUnusualPovertyStudent" resultType="int">
+		select count(*)
+		from poverty_student_analyse po, student_support_info info
+		where po.student_no = info.student_no and po.poverty_level!='非贫困生'
+		and info.school_year = (select max(school_year) from student_support_info)
+		and po.any_result='非贫困生' and <![CDATA[ po.poverty_probability < 0.15 ]]>
+	</select>
+
+	<select id="pageUnusualPovertyStudent"
+		resultType="com.sunmnet.bigdata.web.model.entity.student.PovertyStudentAnalyse"
+		parameterType="map">
+		select
+		po.id,
+		po.student_no,info.student_name,info.grade,info.gender,
+		info.college_name,info.college_code,info.grade,info.support_type,
+		(1-po.poverty_probability) as poverty_probability,po.isFocus,po.isFocus,po.month_amount,info.support_amount,
+		po.reason
+		from poverty_student_analyse po, student_support_info info
+		where po.student_no = info.student_no and po.poverty_level!='非贫困生'
+		and info.school_year = (select max(school_year) from student_support_info)
+		and po.any_result='非贫困生' and <![CDATA[ po.poverty_probability < 0.15 ]]>
+		order by poverty_probability desc
+		limit #{beginNum},#{endNum}
+	</select>
+
+	<update id="updateUnusualPovertyStudentFocusStatus"
+		parameterType="com.sunmnet.bigdata.web.model.entity.student.PovertyStudentAnalyse">
+		update poverty_student_analyse
+		set isFocus = #{isfocus,jdbcType=VARCHAR},
+		reason = #{reason,jdbcType=VARCHAR}
+		where id = #{id,jdbcType=INTEGER}
+	</update>
+
+	<select id="countCareStudentInfo" resultType="int" parameterType="map">
+		select count(*)
+		from poverty_student_analyse po, student_info info,poverty_active_support_amount amount
+		where po.student_no = info.student_no and po.student_no = amount.student_no
+		and po.poverty_level='非贫困生'
+		and po.any_result!='非贫困生' and po.poverty_probability > 0.85 and amount.avg_month_amount_add > 100
+		<if test="handleResult != null">
+			and po.handle_result = #{handleResult}
+		</if>
+	</select>
+
+	<select id="pageCareStudentInfo"
+		resultType="com.sunmnet.bigdata.web.model.entity.student.PovertyStudentAnalyse"
+		parameterType="map">
+		select
+		po.id,
+		po.student_no,info.student_name,info.grade,info.gender,
+		info.college_name,info.college_code,info.grade,
+		po.poverty_probability,po.isFocus,po.month_amount,po.poverty_level,po.handle_result,
+		amount.avg_month_amount_add,po.reason,po.handle_result as handleResult
+		from poverty_student_analyse po, student_info info,poverty_active_support_amount amount
+		where po.student_no = info.student_no and po.student_no = amount.student_no
+		and po.poverty_level='非贫困生'
+		and po.any_result!='非贫困生' and po.poverty_probability > 0.85 and amount.avg_month_amount_add > 100
+		<if test="handleResult != null">
+			and po.handle_result = #{handleResult}
+		</if>
+		order by po.poverty_probability desc
+		limit #{beginNum},#{endNum}
+	</select>
+
+	<update id="updateCareStudentInfoFocusStatus"
+		parameterType="com.sunmnet.bigdata.web.model.entity.student.PovertyStudentAnalyse">
+		update poverty_student_analyse
+		set isFocus = #{isfocus,jdbcType=VARCHAR},
+		reason = #{reason,jdbcType=VARCHAR}
+		where id = #{id,jdbcType=INTEGER}
+	</update>
+
+	<update id="updateCareStudentInfoHandleStatus"
+		parameterType="com.sunmnet.bigdata.web.model.entity.student.PovertyStudentAnalyse">
+		update poverty_student_analyse
+		set handle_result = #{handleResult,jdbcType=VARCHAR}
+		where id = #{id,jdbcType=INTEGER}
+	</update>
+
+	<select id="countSpecialFocusStudentInfo" resultType="int" parameterType="map">
+		select count(*)
+		from poverty_student_analyse po, student_info info
+		where po.student_no = info.student_no
+		<if test="isfocus != null">
+      		and po.isFocus=#{isfocus}
+    		</if>
+    		<if test="reason != null">
+      		and po.reason=#{reason}
+    		</if>
+	</select>
+
+	<select id="pageSpecialFocusStudentInfo"
+		resultType="com.sunmnet.bigdata.web.model.entity.student.PovertyStudentAnalyse"
+		parameterType="map">
+		select
+		po.id,
+		po.student_no,info.student_name,info.grade,info.gender,
+		info.college_name,info.college_code,info.grade,
+		po.poverty_probability,po.isFocus,po.month_amount,po.poverty_level,
+		po.reason,po.handle_result as handleResult
+		from poverty_student_analyse po, student_info info
+		where po.student_no = info.student_no
+		<if test="isfocus != null">
+      		and po.isFocus=#{isfocus}
+    		</if>
+    		<if test="reason != null">
+      		and po.reason=#{reason}
+    		</if>
+    		order by po.poverty_probability desc
+		limit #{beginNum},#{endNum}
+	</select>
+	<update id="updateSpecialFocusStudentInfoFocusStatus"
+		parameterType="com.sunmnet.bigdata.web.model.entity.student.PovertyStudentAnalyse">
+		update poverty_student_analyse
+		set isFocus = #{isfocus,jdbcType=VARCHAR},
+		reason = #{reason,jdbcType=VARCHAR}
+		where id = #{id,jdbcType=INTEGER}
+	</update>
+
+
+	<!-- 查询贫困生总人数 -->
+	<select id="countPovertyStudent" resultType="java.lang.Integer">
+		select count(DISTINCT student_no) from student_support_info where status
+		= '1'
+	</select>
+
+	<!-- 查询虚假贫困生总人数 -->
+	<select id="countUnPovertyStudent" resultType="java.lang.Integer">
+		SELECT count(distinct
+		a.student_no) from poverty_student_analyse as a,student_info as b
+		WHERE b.status = '1' and a.student_no = b.student_no
+		and poverty_level != '非贫困生' and any_result = '非贫困生'
+	</select>
+
+	<!-- 查询建议关爱总人数 -->
+	<select id="countSupportPovertyStudent" resultType="java.lang.Integer">
+		SELECT
+		count(distinct a.student_no) from poverty_student_analyse as
+		a,student_info as b
+		WHERE b.status = '1' and a.student_no = b.student_no and
+		poverty_level = '非贫困生' and any_result != '非贫困生'
+	</select>
+
+	<!-- 根据学号查询虚假贫困生 -->
+	<select id="getUnPovertyByStudentNo" resultType="com.sunmnet.bigdata.web.model.entity.student.PovertyStudentAnalyse" parameterType="String">
+		SELECT a.*
+		  from poverty_student_analyse as a,
+		       student_info as b
+		 WHERE b.status = '1'
+		   and a.student_no = b.student_no
+		   and poverty_level != '非贫困生'
+		   and any_result = '非贫困生'
+		   and a.student_no = #{studentNo}
+	</select>
+
+	<!-- 根据学号查询建议关爱学生 -->
+	<select id="getSupportPovertyByStudentNo" resultType="com.sunmnet.bigdata.web.model.entity.student.PovertyStudentAnalyse" parameterType="String">
+	   SELECT a.*
+		 from poverty_student_analyse as a,
+	          student_info as b
+		WHERE b.status = '1'
+		  and a.student_no = b.student_no
+		  and poverty_level = '非贫困生'
+		  and any_result != '非贫困生'
+		  and a.student_no = #{studentNo}
+	</select>
+
+	<!--获得非贫困生月均消费中位数  -->
+	<select id="getMonthAmountMiddle" resultType="java.math.BigDecimal">
+	   SELECT avg(t1.month_amount) as median_val FROM (
+		SELECT @rownum:=@rownum+1 as row_number, d.month_amount
+		FROM poverty_student_analyse d, (SELECT @rownum:=0) r
+		WHERE
+		poverty_level = '非贫困生' and any_result = '非贫困生'
+		ORDER BY d.month_amount
+		) as t1,
+		(
+		SELECT count(*) as total_rows
+		FROM poverty_student_analyse d
+		WHERE
+		poverty_level = '非贫困生' and any_result = '非贫困生'
+		) as t2
+		WHERE 1
+		AND t1.row_number in ( floor((total_rows+1)/2), floor((total_rows+2)/2) );
+	</select>
+</mapper>

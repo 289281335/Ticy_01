@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+<mapper namespace="com.sunmnet.bigdata.web.dao.student.IStudentConsumeDetailDAO">
+<!--
+save
+update
+findOne
+findOneByProperty
+findOneByCondition
+delete
+deleteByCondition
+deleteByProperty
+findAll
+queryPage
+count
+-->
+
+
+
+<sql id="Base_Column_List">
+  id as id ,
+  student_no as studentNo ,
+  student_name as studentName ,
+  consume_time as consumeTime ,
+  consume_type as consumeType ,
+  amount as amount ,
+  remaining_amount as remainingAmount ,
+  merchants as merchants ,
+  pos_no as posNo ,
+  merchants_place as merchantsPlace 
+</sql>
+  <!--综合画像 一卡通消费趋势分析 男女月平均-->
+<select id="countConsumeTrendByGender" parameterType="String" resultType="Map">
+  select vct.consume_time_year consumeTimeYear,vct.consume_time_month consumeTimeMonth,vct.sum_amount sumAmount,vct.avg_amount avgAmount,vct.count_no countNo,vct.gender gender from view_count_consume_trend vct where 1=1
+  <if test="consumeTime ==null or consumeTime==''">
+    and YEAR(vct.consume_time_year)=YEAR(NOW())
+  </if>
+  <if test="consumeTime != null and consumeTime != ''" >
+    and YEAR(vct.consume_time_year)=YEAR(#{consumeTime})
+  </if>
+  <if test="gender != null and gender != ''" >
+    and vct.gender=#{gender}
+  </if>
+</select>
+  <!--综合画像 一卡通消费趋势分析 校总体月平均-->
+  <select id="countConsumeTrendAll" parameterType="String" resultType="Map">
+    select vct.consume_time_year consumeTimeYear,vct.consume_time_month consumeTimeMonth,sum(vct.sum_amount) sumAmount,sum(vct.avg_amount)/2 avgAmount,sum(vct.count_no) countNo from view_count_consume_trend vct where 1=1
+    <if test="consumeTime ==null or consumeTime==''">
+      and YEAR(vct.consume_time_year)=YEAR(NOW())
+    </if>
+    <if test="consumeTime != null and consumeTime != ''" >
+      and YEAR(vct.consume_time_year)=YEAR(#{consumeTime})
+    </if>
+    group by vct.consume_time_month
+  </select>
+</mapper>
+

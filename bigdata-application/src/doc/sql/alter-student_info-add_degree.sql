@@ -1,0 +1,1 @@
+ALTER TABLE student_info add `degree` varchar(2) DEFAULT NULL COMMENT '学位 (1专科 2本科 3研究生 4博士生)'

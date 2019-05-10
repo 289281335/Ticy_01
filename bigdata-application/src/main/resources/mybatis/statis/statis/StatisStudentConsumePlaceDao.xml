@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+<mapper namespace="com.sunmnet.bigdata.web.dao.statics.IStatisStudentConsumePlaceDAO">
+<!--
+save
+update
+findOne
+findOneByProperty
+findOneByCondition
+delete
+deleteByCondition
+deleteByProperty
+findAll
+queryPage
+count
+-->
+
+
+
+<sql id="Base_Column_List">
+  id as id ,
+  student_no as studentNo ,
+  student_name as studentName ,
+  consume_start_date as consumeStartDate ,
+  consume_end_date as consumeEndDate ,
+  consume_place as consumePlace ,
+  consume_window as consumeWindow ,
+  consume_type as consumeType ,
+  consume_times as consumeTimes ,
+  consume_amount as consumeAmount 
+</sql>
+
+</mapper>
+

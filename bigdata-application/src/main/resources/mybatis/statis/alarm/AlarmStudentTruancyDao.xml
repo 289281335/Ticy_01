@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+<mapper namespace="com.sunmnet.bigdata.web.dao.alarm.IAlarmStudentTruancyDAO">
+<!--
+save
+update
+findOne
+findOneByProperty
+findOneByCondition
+delete
+deleteByCondition
+deleteByProperty
+findAll
+queryPage
+count
+-->
+
+
+
+<sql id="Base_Column_List">
+  student_no as studentNo ,
+  collect_date as collectDate ,
+  student_name as studentName ,
+  college_code as collegeCode ,
+  college_name as collegeName ,
+  major_code as majorCode ,
+  major_name as majorName ,
+  gender as gender ,
+  academy_name as academyName ,
+  class_name as className ,
+  nation as nation ,
+  student_place as studentPlace ,
+  warning_date as warningDate ,
+  truancy_times as truancyTimes ,
+  deal_flag as dealFlag ,
+  result_warning as resultWarning ,
+  result_comment as resultComment ,
+  warning_type as warningType ,
+  deal_date as dealDate 
+</sql>
+
+
+
+  <select id="historyTruancy" resultType="Map">
+    SELECT
+    SUBSTRING( c.warning_date, 1, 7 ) AS course_date,
+    COUNT( c.truancy_times ) AS times
+    FROM
+    alarm_student_truancy c
+    WHERE
+    SUBSTRING( c.warning_date, 1, 10 ) > DATE_SUB( CURDATE( ), INTERVAL 1 YEAR )
+    GROUP BY
+    SUBSTRING( c.warning_date, 1, 7 )
+
+  </select>
+
+  <!-- 更新逃课标识updateTruancyWarning-->
+    <update id="updateTruancyWarning" parameterType="java.lang.String">
+        UPDATE alarm_student_truancy
+        <set>
+            <if test="remark!=null">
+                result_warning = #{remark},
+            </if>
+            <if test="reason!=null">
+                result_comment = #{reason},
+            </if>
+            deal_flag = '1',deal_date =  now()
+        </set>
+        where student_no = #{studentNo} and warning_date  = #{alarmDate}
+    </update>
+</mapper>
+

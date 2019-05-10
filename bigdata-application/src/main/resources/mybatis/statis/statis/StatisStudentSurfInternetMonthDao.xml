@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+<mapper namespace="com.sunmnet.bigdata.web.dao.statics.IStatisStudentSurfInternetMonthDAO">
+<!--
+save
+update
+findOne
+findOneByProperty
+findOneByCondition
+delete
+deleteByCondition
+deleteByProperty
+findAll
+queryPage
+count
+-->
+
+
+
+  <sql id="Base_Column_List">
+    id as id ,
+    student_no as studentNo ,
+    student_name as studentName ,
+    gender as gender ,
+    nation as nation ,
+    college_name as collegeName ,
+    college_code as collegeCode ,
+    major_name as majorName ,
+    major_code as majorCode ,
+    class_name as className ,
+    academy_name as academyName ,
+    grade as grade ,
+    place as place ,
+    avg_surf_net_time as avgSurfNetTime ,
+    period_of_month_net as periodOfMonthNet ,
+    week_1_count as week1count ,
+    weekend_1_count as weekend1count ,
+    week_2_count as week2count ,
+    weekend_2_count as weekend2count ,
+    week_3_count as week3count ,
+    weekend_3_count as weekend3count ,
+    week_4_count as week4count ,
+    weekend_4_count as weekend4count ,
+    week_5_count as week5count ,
+    weekend_5_count as weekend5count ,
+    week_6_count as week6count ,
+    weekend_6_count as weekend6count ,
+    week_7_count as week7count ,
+    weekend_7_count as weekend7count ,
+    netHealthRate as nethealthrate
+  </sql>
+
+  <select id="getSurfInternetOfMonth" resultType="StatisStudentSurfInternetMonth" parameterType="String">
+    select
+      <include refid="Base_Column_List" />
+    from statis_student_surf_internet_month
+    where student_no = #{studentNo}
+  </select>
+
+  <select id="getAvgNetTime" resultType="java.lang.Double" parameterType="StudentInfoREQ">
+    select avg(avg_surf_net_time)
+    from statis_student_surf_internet_month
+    <trim prefix="WHERE" prefixOverrides="AND | OR">
+      <if test="collegeCode!=null">
+        AND college_code = #{collegeCode}
+      </if>
+      <if test="majorCode!=null">
+        AND major_code = #{majorCode}
+      </if>
+
+      <if test="className != null">
+        and class_name=#{className}
+      </if>
+
+      <if test="nation != null">
+        and nation=#{nation}
+      </if>
+      <if test="gender != null">
+        and gender=#{gender}
+      </if>
+
+      <if test="Place != null">
+        and place=#{Place}
+      </if>
+
+      <if test="academyName != null">
+        and academy_name=#{academyName}
+      </if>
+    </trim>
+
+  </select>
+
+
+  <select id="analyseNetTime" resultType="java.util.HashMap" parameterType="statisStudentSurfInternetMonthREQ">
+    SELECT COUNT(*) AS total, CASE
+    WHEN avg_surf_net_time > 10 THEN 1
+    WHEN avg_surf_net_time > 8 THEN 2
+    WHEN avg_surf_net_time > 6 THEN 3
+    WHEN avg_surf_net_time > 4 THEN 4
+    WHEN avg_surf_net_time > 2 THEN 5
+    ELSE  6 END AS categary
+    FROM statis_student_surf_internet_month
+    <trim prefix="WHERE" prefixOverrides="AND | OR">
+      <if test="collegeCode!=null">
+        AND college_code = #{collegeCode}
+      </if>
+      <if test="majorCode!=null">
+        AND major_code = #{majorCode}
+      </if>
+      <if test="className != null">
+        and class_name=#{className}
+      </if>
+      <if test="nation != null">
+        and nation=#{nation}
+      </if>
+      <if test="gender != null">
+        and gender=#{gender}
+      </if>
+      <if test="place != null">
+        and place=#{place}
+      </if>
+      <if test="academyName != null">
+        and academy_name=#{academyName}
+      </if>
+    </trim>
+    GROUP BY CASE
+    WHEN avg_surf_net_time > 10 THEN 1
+    WHEN avg_surf_net_time > 8 THEN 2
+    WHEN avg_surf_net_time > 6 THEN 3
+    WHEN avg_surf_net_time > 4 THEN 4
+    WHEN avg_surf_net_time > 2 THEN 5
+    ELSE  6 END
+  </select>
+
+
+
+
+  <select id="analysePeriodOfMonthNet" resultType="java.util.HashMap" parameterType="statisStudentSurfInternetMonthREQ">
+    SELECT COUNT(*) AS total, period_of_month_net AS categary
+    FROM statis_student_surf_internet_month
+    <trim prefix="WHERE" prefixOverrides="AND | OR">
+      <if test="collegeCode!=null">
+        AND college_code = #{collegeCode}
+      </if>
+      <if test="majorCode!=null">
+        AND major_code = #{majorCode}
+      </if>
+      <if test="className != null">
+        and class_name=#{className}
+      </if>
+      <if test="nation != null">
+        and nation=#{nation}
+      </if>
+      <if test="gender != null">
+        and gender=#{gender}
+      </if>
+      <if test="Place != null">
+        and place=#{Place}
+      </if>
+      <if test="academyName != null">
+        and academy_name=#{academyName}
+      </if>
+    </trim>
+    GROUP BY period_of_month_net
+  </select>
+</mapper>
+

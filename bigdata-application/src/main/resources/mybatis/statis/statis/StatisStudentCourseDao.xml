@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+<mapper namespace="com.sunmnet.bigdata.web.dao.statics.IStatisStudentCourseDAO">
+<!--
+save
+update
+findOne
+findOneByProperty
+findOneByCondition
+delete
+deleteByCondition
+deleteByProperty
+findAll
+queryPage
+count
+-->
+
+
+
+<sql id="Base_Column_List">
+  student_no as studentNo ,
+  course_date as courseDate ,
+  school_term as schoolTerm ,
+  truancy_times as truancyTimes ,
+  normal_times as normalTimes ,
+  late_times as lateTimes ,
+  left_times as leftTimes 
+</sql>
+
+</mapper>
+

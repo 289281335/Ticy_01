@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.sunmnet.bigdata.web.dao.alarm.IAlarmStudentDAO">
+<!--
+save
+update
+findOne
+findOneByProperty
+findOneByCondition
+delete
+deleteByCondition
+deleteByProperty
+findAll
+queryPage
+count
+-->
+
+
+
+<sql id="Base_Column_List">
+  id as id ,
+  student_code as studentCode ,
+  type as type ,
+  key_value as keyValue ,
+  day as day ,
+  create_time as createTime ,
+  update_time as updateTime ,
+  flag as flag ,
+  cycle_begin as cycleBegin ,
+  cycle_end as cycleEnd ,
+  student_name as studentName ,
+  major_code as majorCode ,
+  major_name as majorName ,
+  student_sex as studentSex 
+</sql>
+
+  <select id="countAlarmStudent" resultType="java.lang.Long">
+  SELECT
+  count(id)
+  FROM alarm_student
+  </select>
+
+  <select id="getAlarmStudent" resultType="AlarmStudentRES" parameterType="AlarmStudentREQ">
+    SELECT
+      <include refid="Base_Column_List" />
+    FROM alarm_student
+    <trim prefix="WHERE" prefixOverrides="AND | OR">
+      <if test="id != null " >
+        and id = #{id}
+      </if>
+    </trim>
+    limit 1
+  </select>
+
+  <select id="listAlarmStudent" resultType="AlarmStudentRES" parameterType="AlarmStudentREQ">
+    SELECT
+      <include refid="Base_Column_List" />
+    FROM
+    alarm_student
+    <trim prefix="WHERE" prefixOverrides="AND | OR">
+      <if test="alarmStudentREQ.studentCode != null and alarmStudentREQ.studentCode != ''" >
+        and student_code = #{studentCode}
+      </if>
+      <if test="alarmStudentREQ.type != null " >
+        and type = #{alarmStudentREQ.type}
+      </if>
+    </trim>
+
+    <if test="sort!=null">
+      order by ${sort.toString().replace(":","")}
+    </if>
+
+  </select>
+
+  <select id="pageAlarmStudent" resultType="AlarmStudentRES" parameterType="AlarmStudentREQ">
+    SELECT
+    <include refid="Base_Column_List" />
+    FROM alarm_student
+    <trim prefix="WHERE" prefixOverrides="AND | OR">
+      <if test="alarmStudentREQ.studentCode != null and alarmStudentREQ.studentCode != ''" >
+        and student_code = #{studentCode}
+      </if>
+      <if test="alarmStudentREQ.type != null " >
+        and type = #{alarmStudentREQ.type}
+      </if>
+    </trim>
+
+    <if test="sort!=null">
+      order by ${sort.toString().replace(":","")}
+    </if>
+  </select>
+  <select id="countUndisposedAlarm" resultType="Map">
+    select
+    (select count(a.student_no) from alarm_late_back a where a.deal_flag=0) countLateBack,
+    (select count(a.student_no) from alarm_student_lost a where a.deal_flag=0) countLost,
+    (select count(a.student_no) from alarm_student_subjects a where a.deal_flag=0) countSubjects,
+    (select count(a.student_no) from alarm_student_truancy a where a.deal_flag=0) countTruancy
+    from dual
+  </select>
+
+</mapper>

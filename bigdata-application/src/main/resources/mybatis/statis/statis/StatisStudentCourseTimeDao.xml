@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+<mapper namespace="com.sunmnet.bigdata.web.dao.statics.IStatisStudentCourseTimeDAO">
+<!--
+save
+update
+findOne
+findOneByProperty
+findOneByCondition
+delete
+deleteByCondition
+deleteByProperty
+findAll
+queryPage
+count
+-->
+
+
+
+    <sql id="Base_Column_List">
+      student_no as studentNo ,
+      course_time as courseTime ,
+      course_card_time as courseCardTime
+    </sql>
+
+    <select id="listStatisCourseTimeByStudentNo" parameterType="String"
+          resultType="StatisStudentCourseTime">
+    SELECT
+      student_no as studentNo ,
+      course_time as courseTime ,
+      course_cardtime as courseCardTime
+    FROM
+    statis_student_course_time
+    <trim prefix="WHERE" prefixOverrides="AND | OR">
+      <if test="studentNo!=null">
+        AND student_no = #{studentNo}
+      </if>
+      <if test="startDate!=null">
+        AND course_time >= #{startDate}
+      </if>
+      <if test="endDate!=null">
+        AND  #{endDate} >= course_time
+      </if>
+    </trim>
+
+    </select>
+
+
+    <select id="onTimeForClass" parameterType="StudentInfoREQ" resultType="Map">
+        SELECT
+          d.course_time,
+          SUM(d.course_card_time) / COUNT(1) AS SUM
+        FROM
+        (
+            SELECT
+            course.*
+            FROM
+            statis_student_course_time course
+            LEFT JOIN student_info info ON course.student_no=info.student_no AND info.status='1'
+            WHERE
+                UNIX_TIMESTAMP(CONCAT(course.course_time,'-01 00:00:00'))
+                BETWEEN UNIX_TIMESTAMP(SUBDATE(DATE_FORMAT(NOW(), "%Y-%m-%d %H:%i:%S"),INTERVAL 12 MONTH))
+                AND UNIX_TIMESTAMP()
+        ) d
+        <trim prefix="WHERE" prefixOverrides="AND | OR">
+            <if test="studentInfoREQ.studentNo != null" >
+                and d.student_no = #{studentNo}
+            </if>
+            <if test="studentInfoREQ.identityNo != null" >
+                and d.identity_no = #{identityNo}
+            </if>
+            <if test="studentInfoREQ.name != null" >
+                and d.name = #{name}
+            </if>
+            <if test="studentInfoREQ.gender != null" >
+                and d.gender = #{gender}
+            </if>
+            <if test="studentInfoREQ.phone != null" >
+                and d.phone = #{phone}
+            </if>
+            <if test="studentInfoREQ.email != null" >
+                and d.email = #{email}
+            </if>
+
+            <if test="studentInfoREQ.nativePlace != null" >
+                and d.native_place = #{nativePlace}
+            </if>
+            <if test="studentInfoREQ.politicalLandscape != null" >
+                and d.political_landscape = #{politicalLandscape}
+            </if>
+            <if test="studentInfoREQ.examineeNo != null" >
+                and d.examinee_no = #{examineeNo}
+            </if>
+            <if test="studentInfoREQ.schoolYear != null" >
+                and d.school_year = #{schoolYear}
+            </if>
+            <if test="studentInfoREQ.graduatedSchool != null" >
+                and d.graduated_school = #{graduatedSchool}
+            </if>
+            <if test="studentInfoREQ.academyName != null" >
+                and d.academy_name = #{academyName}
+            </if>
+            <if test="studentInfoREQ.collegeName != null" >
+                and college_name = #{collegeName}
+            </if>
+            <if test="studentInfoREQ.collegeCode != null" >
+                and d.college_code = #{collegeCode}
+            </if>
+            <if test="studentInfoREQ.majorName != null" >
+                and d.major_name = #{majorName}
+            </if>
+            <if test="studentInfoREQ.majorCode != null" >
+                and major_code = #{majorCode}
+            </if>
+            <if test="studentInfoREQ.className != null" >
+                and d.class_name = #{className}
+            </if>
+            <if test="studentInfoREQ.nation != null" >
+                and d.nation = #{nation}
+            </if>
+            <if test="studentInfoREQ.birthday != null" >
+                and d.birthday = #{birthday}
+            </if>
+        </trim>
+        GROUP BY d.course_time
+    </select>
+
+    <!-- 查询逃课信息 -->
+    <select id="selectTruancyRecordByStudentNo" resultType="Map" parameterType="String" >
+        <![CDATA[
+	SELECT
+		ssc.*,si.name,sc.course_name
+	FROM
+		statis_student_course ssc,student_course sc,student_info si
+
+	WHERE ssc.student_no=sc.student_no and sc.student_no=si.student_no
+          #ssc.student_no = #{studentNo}
+    ORDER BY sc.course_name desc
+    ]]>
+    </select>
+</mapper>
+

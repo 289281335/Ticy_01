@@ -1,0 +1,214 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+<mapper namespace="com.sunmnet.bigdata.web.dao.student.IStudentConsumptionIndexDAO">
+<!--
+save
+update
+findOne
+findOneByProperty
+findOneByCondition
+delete
+deleteByCondition
+deleteByProperty
+findAll
+queryPage
+count
+-->
+
+  <select id="eatIndex" resultType="Map">
+  SELECT COUNT(*) AS dietIndex ,
+    (CASE WHEN diet_index >= 0.6 THEN 'googEat'
+         WHEN diet_index >= 0.4 THEN 'nomalEat'
+    ELSE 'badEat' END)
+    FROM
+    student_consumption_index
+    GROUP  BY
+    (CASE WHEN diet_index >= 0.6 THEN 'googEat'
+         WHEN diet_index >= 0.4 THEN 'nomalEat'
+    ELSE 'badEat' END)
+  </select>
+
+  <select id="socialIndex" resultType="Map">
+    SELECT COUNT(1) AS socialIndex,
+    CASE WHEN frideCount > 3 THEN 'googSocial'
+    WHEN frideCount > 0 THEN 'nomalSocial'
+    ELSE 'badSocial' END AS category
+    FROM
+    (
+    SELECT COUNT(1) AS frideCount FROM student_social_friend
+    GROUP BY student_no
+    ) t
+    GROUP BY CASE WHEN frideCount > 3 THEN 'googSocial'
+    WHEN frideCount > 0 THEN 'nomalSocial'
+    ELSE 'badSocial' END
+  </select>
+
+  <select id="studyIndex" resultType="Map">
+    SELECT COUNT(*) AS scoreIndex ,
+    CASE WHEN score_index >= 0.6 THEN 'googStudy'
+         WHEN score_index >= 0.44 THEN 'nomalStudy'
+    ELSE 'badStudy' END
+    FROM
+    student_consumption_index
+    GROUP  BY
+    CASE WHEN score_index >= 0.6 THEN 'googStudy'
+	 WHEN score_index >= 0.44 THEN 'nomalStudy'
+    ELSE 'badStudy' END
+  </select>
+
+  <select id="poorIndex" resultType="Map">
+    SELECT COUNT(DISTINCT student_no) FROM student_support_info
+    WHERE STATUS = '1'
+    GROUP BY gender
+  </select>
+
+
+  <!--查询外出指数 -->
+  <select id="weekOutIndex" resultType="String" parameterType="String">
+    SELECT week_out_index
+    from student_consumption_index
+    where student_no =  #{studentNo}
+  </select>
+
+
+
+
+  <!-- 查询三餐规律度总条数 -->
+  <select id="countDietRegular" resultType="int" >
+    SELECT COUNT(*)
+    FROM student_consumption_index
+    WHERE diet_index > 0
+  </select>
+
+  <!-- 查询指定行号的三餐规律度 -->
+  <select id="dietRegularByIndex" resultType="com.sunmnet.bigdata.web.model.entity.student.StudentConsumptionIndex" parameterType="int">
+    select *
+    from student_consumption_index s
+    where s.eat_index > 0
+    order by s.eat_index asc
+    limit ${index}, 1
+  </select>
+
+
+  <!-- 根据条件查询三餐规律度人数 -->
+  <select id="countDietRegularByCondition" resultType="Integer" parameterType="com.sunmnet.bigdata.web.model.request.student.StudentInfoREQ">
+    <![CDATA[
+  	SELECT COUNT(DISTINCT r.student_no)
+  	   FROM student_consumption_index r,
+  	        student_info si
+ 	   WHERE
+		    r.student_no = si.student_no
+        AND r.diet_index >= #{eatIndex}
+        AND si.status = '1'
+      ]]>
+    <if test="academyName != null and academyName != ''" >
+      and si.academy_name = #{academyName}
+    </if>
+    <if test="collegeCode != null and collegeCode != ''" >
+      and si.college_code = #{collegeCode}
+    </if>
+    <if test="majorCode != null and majorCode != ''" >
+      and si.major_code = #{majorCode}
+    </if>
+    <if test="className != null and className != ''" >
+      and si.class_name = #{className}
+    </if>
+    <if test="nation != null and nation != ''" >
+      and si.nation = #{nation}
+    </if>
+    <if test="gender != null and gender != ''" >
+      and si.gender = #{gender}
+    </if>
+    <if test="nativePlace != null and nativePlace != ''" >
+      and si.native_place = #{nativePlace}
+    </if>
+  </select>
+
+  <!--根据学号查询学习水平  -->
+  <select id="levelByStudentNo" resultType="java.math.BigDecimal" parameterType="String">
+    SELECT score_index
+    FROM student_consumption_index
+    WHERE student_no = #{studentNo}
+  </select>
+
+  <!-- 查询学习水平总条数 -->
+  <select id="countLevel" resultType="int" >
+    SELECT count(*)
+    FROM student_consumption_index
+  </select>
+
+  <!-- 查询指定行号的学习水平-->
+  <select id="levelByIndex" resultType="com.sunmnet.bigdata.web.model.entity.student.StudentConsumptionIndex" parameterType="int">
+    select
+   student_no as studentNo ,
+  score_index as scoreIndex ,
+  diet_index as dietIndex ,
+  consumption_index as consumptionIndex ,
+  week_out_index as weekOutIndex ,
+  statis_cycle as statisCycle
+    from student_consumption_index s
+    order by s.score_index asc
+    limit #{index}, 1
+  </select>
+
+  <!--根据条件查询学生数量-->
+  <select id="countLevelByCondition" resultType="Integer" parameterType="com.sunmnet.bigdata.web.model.request.student.StudentInfoREQ">
+    <![CDATA[
+  	 select count(DISTINCT r.student_no)
+  	   from student_consumption_index r,
+  	        student_info si
+ 	   WHERE
+		    r.student_no = si.student_no
+        and r.score_index >= #{scoreIndex}
+        and si.status = '1'
+      ]]>
+    <if test="academyName != null and academyName != ''" >
+      and si.academy_name = #{academyName}
+    </if>
+    <if test="collegeCode != null and collegeCode != ''" >
+      and si.college_code = #{collegeCode}
+    </if>
+    <if test="majorCode != null and majorCode != ''" >
+      and si.major_code = #{majorCode}
+    </if>
+    <if test="className != null and className != ''" >
+      and si.class_name = #{className}
+    </if>
+    <if test="nation != null and nation != ''" >
+      and si.nation = #{nation}
+    </if>
+    <if test="gender != null and gender != ''" >
+      and si.gender = #{gender}
+    </if>
+    <if test="nativePlace != null and nativePlace != ''" >
+       and si.native_place = #{nativePlace}
+    </if>
+  </select>
+
+  <!-- 查询专业人数 -->
+  <select id="selectStudentCountByMajorCode" resultType="Integer" parameterType="string">
+ select count(s.student_no)
+    from student_info s,
+         statis_student_scores_record r
+   where s.student_no = r.student_no
+    and r.major_code = #{majorCode}
+  </select>
+  <!-- 查询学习稳定性排名 -->
+  <select id="selectStabilityRankingByStudentNumberAndMajorCode" resultType="Integer" parameterType="string">
+    SELECT c.rowno from
+    (SELECT @rowno:=@rowno + 1 AS rowno,a.*
+    FROM (select r.student_no,
+    STD(r.average_score)/count(*) std
+    from student_info s,
+    statis_student_scores_record r
+    where s.student_no = r.student_no
+    and r.major_code = #{majorCode}
+    GROUP BY r.student_no
+    order by std asc) a,
+    (SELECT @rowno:=0) b) c
+    where c.student_no = #{studentNo}
+  </select>
+</mapper>
+

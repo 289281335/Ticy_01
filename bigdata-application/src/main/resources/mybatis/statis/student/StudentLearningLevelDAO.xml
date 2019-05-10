@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.sunmnet.bigdata.web.dao.student.IStudentLearningLevelDAO" >
+  
+  <!--根据学号查询学习水平  -->
+  <select id="selectLearningLevelByStudentNo" resultType="java.math.BigDecimal" >
+   select s.score_index
+     from student_consumption_index s
+    where s.student_no = #{studentNo}
+  </select>
+  
+  <!-- 查询学习水平总条数 -->
+  <select id="countLearningLevel" resultType="int" >
+  	select count(*)
+  	  from student_consumption_index s 
+  </select>
+  
+  <!-- 查询指定行号的学习水平-->
+  <select id="selectStudentLearningLevelByLineNo" resultType="com.sunmnet.bigdata.web.model.entity.student.StudentConsumptionIndex" parameterType="int">
+  	  	select *
+	  	  from student_consumption_index s
+	  order by s.score_index asc
+	     limit ${lineNo}, 1
+  </select>
+  
+  <!--根据条件查询学生数量-->
+  <select id="countLearningLevelByCondition" resultType="Integer" parameterType="com.sunmnet.bigdata.web.model.request.student.StudentInfoREQ">
+      <![CDATA[ 
+  	 select count(DISTINCT r.student_no)
+  	   from student_consumption_index sci,
+  	        student_info si
+ 	   WHERE 
+		    sci.student_no = si.student_no
+        and sci.score_index >= #{scoreIndex}
+        and si.status = '1'
+      ]]>
+		 <if test="academyName != null and academyName != ''" >
+            and si.academy_name = #{academyName}
+         </if>
+		 <if test="collegeCode != null and collegeCode != ''" >
+            and si.college_code = #{collegeCode}
+         </if>
+         <if test="majorCode != null and majorCode != ''" >
+            and si.major_code = #{majorCode}
+         </if>
+         <if test="className != null and className != ''" >
+            and si.class_name = #{className}
+         </if>
+         <if test="nation != null and nation != ''" >
+            and si.nation = #{nation}
+         </if>
+         <if test="gender != null and gender != ''" >
+            and si.gender = #{gender}
+         </if>
+         <if test="nativePlace != null and nativePlace != ''" >
+            and si.native_place = #{nativePlace}
+         </if>
+  </select>
+  
+</mapper>

@@ -1,0 +1,347 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.sunmnet.bigdata.web.dao.student.IStudentGraduateIndexInfoDAO" >
+
+    <select id="selectByPrimaryKey" resultType="com.sunmnet.bigdata.web.model.entity.student.StudentGraduateIndexInfo" parameterType="java.lang.Long" >
+        select
+        id, student_no, average_achievement, study_level, achievement_status, to_class_rate,
+        punctuality_rate, rewards, country_rewards, province_rewards, school_rewards, competition,
+        activity, borrow_book, social_connections, friends_universality, dormitory_relationship,
+        super_scholar_friends, work_rest_regularity, sleep_situation, sleep_time, out_situation,
+        three_meals_regularity, breakfast_situation, internet_health, index_total, create_time,
+        modify_time
+        from graduate_index_info
+        where id = #{id,jdbcType=BIGINT}
+    </select>
+    <!--查询有没有毕业生指标信息-->
+    <select id="getGraduateIndexInfoTotal" resultType="java.lang.Long">
+        select  count(0)  from graduate_index_info
+    </select>
+
+    <!--查询学生指标信息根据学号-->
+    <select id="getByStudentNo" resultType="com.sunmnet.bigdata.web.model.entity.student.StudentGraduateIndexInfo" parameterType="java.lang.String" >
+        select
+        id, student_no, average_achievement, study_level, achievement_status, to_class_rate,
+        punctuality_rate, rewards, country_rewards, province_rewards, school_rewards, competition,
+        activity, borrow_book, social_connections, friends_universality, dormitory_relationship,
+        super_scholar_friends, work_rest_regularity, sleep_situation, sleep_time, out_situation,
+        three_meals_regularity, breakfast_situation, internet_health, index_total, create_time,
+        modify_time
+        from graduate_index_info
+        where student_no = #{studentNo,jdbcType=VARCHAR}
+    </select>
+
+    <!--根据学号查询学生指标值前三-->
+    <select id="getGraduateIndexInfoTopThree" resultType="com.sunmnet.bigdata.web.model.entity.student.StudentGraduateIndexInfo" parameterType="list" >
+        select
+        id, student_no, average_achievement, study_level, achievement_status, to_class_rate,
+        punctuality_rate, rewards, country_rewards, province_rewards, school_rewards, competition,
+        activity, borrow_book, social_connections, friends_universality, dormitory_relationship,
+        super_scholar_friends, work_rest_regularity, sleep_situation, sleep_time, out_situation,
+        three_meals_regularity, breakfast_situation, internet_health, index_total, create_time,
+        modify_time
+        from graduate_index_info
+        where student_no in
+        		<foreach item="item" index="index" collection="list" open="(" separator="," close=")">
+				#{item}
+				</foreach>
+		order by index_total desc LIMIT 0,3
+    </select>
+
+
+    <!--根据学号查询学生指标值求和-->
+    <select id="getGraduateIndexInfo" resultType="com.sunmnet.bigdata.web.model.entity.student.StudentGraduateIndexInfo" parameterType="list" >
+        select
+        sum(average_achievement) average_achievement, sum(study_level) study_level, sum(achievement_status) achievement_status, sum(to_class_rate) to_class_rate,
+        sum(punctuality_rate) punctuality_rate, sum(rewards) rewards, sum(country_rewards) country_rewards, sum(province_rewards) province_rewards, sum(school_rewards) school_rewards,
+				sum(competition) competition,sum(activity) activity, sum(borrow_book) borrow_book, sum(social_connections) social_connections, sum(friends_universality)friends_universality,
+				sum(dormitory_relationship) dormitory_relationship,  sum(super_scholar_friends) super_scholar_friends, sum(work_rest_regularity) work_rest_regularity, sum(sleep_situation) sleep_situation,
+				sum(sleep_time) sleep_time, sum(out_situation) out_situation,sum(three_meals_regularity) three_meals_regularity, sum(breakfast_situation)breakfast_situation, sum(internet_health) internet_health
+
+        from graduate_index_info
+        where student_no in
+        		<foreach item="item" index="index" collection="list" open="(" separator="," close=")">
+				#{item}
+				</foreach>
+    </select>
+    <!--查新总数-->
+    <select id="getGraduateIndexInfoCount" resultType="java.lang.Long" parameterType="list" >
+        select   count(0)
+        from graduate_index_info
+        where student_no in
+        		<foreach item="item" index="index" collection="list" open="(" separator="," close=")">
+				#{item}
+				</foreach>
+    </select>
+
+
+
+     <insert id="insertSelective" parameterType="com.sunmnet.bigdata.web.model.entity.student.StudentGraduateIndexInfo" >
+        insert into graduate_index_info
+        <trim prefix="(" suffix=")" suffixOverrides="," >
+            <if test="id != null" >
+                id,
+            </if>
+            <if test="studentNo != null" >
+                student_no,
+            </if>
+            <if test="averageAchievement != null" >
+                average_achievement,
+            </if>
+            <if test="studyLevel != null" >
+                study_level,
+            </if>
+            <if test="achievementStatus != null" >
+                achievement_status,
+            </if>
+            <if test="toClassRate != null" >
+                to_class_rate,
+            </if>
+            <if test="punctualityRate != null" >
+                punctuality_rate,
+            </if>
+            <if test="rewards != null" >
+                rewards,
+            </if>
+            <if test="countryRewards != null" >
+                country_rewards,
+            </if>
+            <if test="provinceRewards != null" >
+                province_rewards,
+            </if>
+            <if test="schoolRewards != null" >
+                school_rewards,
+            </if>
+            <if test="competition != null" >
+                competition,
+            </if>
+            <if test="activity != null" >
+                activity,
+            </if>
+            <if test="borrowBook != null" >
+                borrow_book,
+            </if>
+            <if test="socialConnections != null" >
+                social_connections,
+            </if>
+            <if test="friendsUniversality != null" >
+                friends_universality,
+            </if>
+            <if test="dormitoryRelationship != null" >
+                dormitory_relationship,
+            </if>
+            <if test="superScholarFriends != null" >
+                super_scholar_friends,
+            </if>
+            <if test="workRestRegularity != null" >
+                work_rest_regularity,
+            </if>
+            <if test="sleepSituation != null" >
+                sleep_situation,
+            </if>
+            <if test="sleepTime != null" >
+                sleep_time,
+            </if>
+            <if test="outSituation != null" >
+                out_situation,
+            </if>
+            <if test="threeMealsRegularity != null" >
+                three_meals_regularity,
+            </if>
+            <if test="breakfastSituation != null" >
+                breakfast_situation,
+            </if>
+            <if test="internetHealth != null" >
+                internet_health,
+            </if>
+            <if test="indexTotal != null" >
+                index_total,
+            </if>
+            <if test="createTime != null" >
+                create_time,
+            </if>
+            <if test="modifyTime != null" >
+                modify_time,
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides="," >
+            <if test="id != null" >
+                #{id,jdbcType=BIGINT},
+            </if>
+            <if test="studentNo != null" >
+                #{studentNo,jdbcType=VARCHAR},
+            </if>
+            <if test="averageAchievement != null" >
+                #{averageAchievement,jdbcType=DECIMAL},
+            </if>
+            <if test="studyLevel != null" >
+                #{studyLevel,jdbcType=DECIMAL},
+            </if>
+            <if test="achievementStatus != null" >
+                #{achievementStatus,jdbcType=DECIMAL},
+            </if>
+            <if test="toClassRate != null" >
+                #{toClassRate,jdbcType=DECIMAL},
+            </if>
+            <if test="punctualityRate != null" >
+                #{punctualityRate,jdbcType=DECIMAL},
+            </if>
+            <if test="rewards != null" >
+                #{rewards,jdbcType=DECIMAL},
+            </if>
+            <if test="countryRewards != null" >
+                #{countryRewards,jdbcType=DECIMAL},
+            </if>
+            <if test="provinceRewards != null" >
+                #{provinceRewards,jdbcType=DECIMAL},
+            </if>
+            <if test="schoolRewards != null" >
+                #{schoolRewards,jdbcType=DECIMAL},
+            </if>
+            <if test="competition != null" >
+                #{competition,jdbcType=DECIMAL},
+            </if>
+            <if test="activity != null" >
+                #{activity,jdbcType=DECIMAL},
+            </if>
+            <if test="borrowBook != null" >
+                #{borrowBook,jdbcType=DECIMAL},
+            </if>
+            <if test="socialConnections != null" >
+                #{socialConnections,jdbcType=DECIMAL},
+            </if>
+            <if test="friendsUniversality != null" >
+                #{friendsUniversality,jdbcType=DECIMAL},
+            </if>
+            <if test="dormitoryRelationship != null" >
+                #{dormitoryRelationship,jdbcType=DECIMAL},
+            </if>
+            <if test="superScholarFriends != null" >
+                #{superScholarFriends,jdbcType=DECIMAL},
+            </if>
+            <if test="workRestRegularity != null" >
+                #{workRestRegularity,jdbcType=DECIMAL},
+            </if>
+            <if test="sleepSituation != null" >
+                #{sleepSituation,jdbcType=DECIMAL},
+            </if>
+            <if test="sleepTime != null" >
+                #{sleepTime,jdbcType=DECIMAL},
+            </if>
+            <if test="outSituation != null" >
+                #{outSituation,jdbcType=DECIMAL},
+            </if>
+            <if test="threeMealsRegularity != null" >
+                #{threeMealsRegularity,jdbcType=DECIMAL},
+            </if>
+            <if test="breakfastSituation != null" >
+                #{breakfastSituation,jdbcType=DECIMAL},
+            </if>
+            <if test="internetHealth != null" >
+                #{internetHealth,jdbcType=DECIMAL},
+            </if>
+            <if test="indexTotal != null" >
+                #{indexTotal,jdbcType=DECIMAL},
+            </if>
+            <if test="createTime != null" >
+                #{createTime,jdbcType=VARCHAR},
+            </if>
+            <if test="modifyTime != null" >
+                #{modifyTime,jdbcType=VARCHAR},
+            </if>
+        </trim>
+    </insert>
+
+    <update id="updateByPrimaryKeySelective" parameterType="com.sunmnet.bigdata.web.model.entity.student.StudentGraduateIndexInfo" >
+        update graduate_index_info
+        <set >
+            <if test="studentNo != null" >
+                student_no = #{studentNo,jdbcType=VARCHAR},
+            </if>
+            <if test="averageAchievement != null" >
+                average_achievement = #{averageAchievement,jdbcType=DECIMAL},
+            </if>
+            <if test="studyLevel != null" >
+                study_level = #{studyLevel,jdbcType=DECIMAL},
+            </if>
+            <if test="achievementStatus != null" >
+                achievement_status = #{achievementStatus,jdbcType=DECIMAL},
+            </if>
+            <if test="toClassRate != null" >
+                to_class_rate = #{toClassRate,jdbcType=DECIMAL},
+            </if>
+            <if test="punctualityRate != null" >
+                punctuality_rate = #{punctualityRate,jdbcType=DECIMAL},
+            </if>
+            <if test="rewards != null" >
+                rewards = #{rewards,jdbcType=DECIMAL},
+            </if>
+            <if test="countryRewards != null" >
+                country_rewards = #{countryRewards,jdbcType=DECIMAL},
+            </if>
+            <if test="provinceRewards != null" >
+                province_rewards = #{provinceRewards,jdbcType=DECIMAL},
+            </if>
+            <if test="schoolRewards != null" >
+                school_rewards = #{schoolRewards,jdbcType=DECIMAL},
+            </if>
+            <if test="competition != null" >
+                competition = #{competition,jdbcType=DECIMAL},
+            </if>
+            <if test="activity != null" >
+                activity = #{activity,jdbcType=DECIMAL},
+            </if>
+            <if test="borrowBook != null" >
+                borrow_book = #{borrowBook,jdbcType=DECIMAL},
+            </if>
+            <if test="socialConnections != null" >
+                social_connections = #{socialConnections,jdbcType=DECIMAL},
+            </if>
+            <if test="friendsUniversality != null" >
+                friends_universality = #{friendsUniversality,jdbcType=DECIMAL},
+            </if>
+            <if test="dormitoryRelationship != null" >
+                dormitory_relationship = #{dormitoryRelationship,jdbcType=DECIMAL},
+            </if>
+            <if test="superScholarFriends != null" >
+                super_scholar_friends = #{superScholarFriends,jdbcType=DECIMAL},
+            </if>
+            <if test="workRestRegularity != null" >
+                work_rest_regularity = #{workRestRegularity,jdbcType=DECIMAL},
+            </if>
+            <if test="sleepSituation != null" >
+                sleep_situation = #{sleepSituation,jdbcType=DECIMAL},
+            </if>
+            <if test="sleepTime != null" >
+                sleep_time = #{sleepTime,jdbcType=DECIMAL},
+            </if>
+            <if test="outSituation != null" >
+                out_situation = #{outSituation,jdbcType=DECIMAL},
+            </if>
+            <if test="threeMealsRegularity != null" >
+                three_meals_regularity = #{threeMealsRegularity,jdbcType=DECIMAL},
+            </if>
+            <if test="breakfastSituation != null" >
+                breakfast_situation = #{breakfastSituation,jdbcType=DECIMAL},
+            </if>
+            <if test="internetHealth != null" >
+                internet_health = #{internetHealth,jdbcType=DECIMAL},
+            </if>
+            <if test="indexTotal != null" >
+                index_total = #{indexTotal,jdbcType=DECIMAL},
+            </if>
+            <if test="createTime != null" >
+                create_time = #{createTime,jdbcType=VARCHAR},
+            </if>
+            <if test="modifyTime != null" >
+                modify_time = #{modifyTime,jdbcType=VARCHAR},
+            </if>
+        </set>
+        where id = #{id,jdbcType=BIGINT}
+    </update>
+
+    <delete id="deleteByPrimaryKey" parameterType="java.lang.Long" >
+        delete from graduate_index_info
+        where id = #{id,jdbcType=BIGINT}
+    </delete>
+</mapper>

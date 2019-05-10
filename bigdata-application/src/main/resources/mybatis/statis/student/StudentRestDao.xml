@@ -1,0 +1,300 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+<mapper namespace="com.sunmnet.bigdata.web.dao.student.IStudentRestDAO">
+<!--
+save
+update
+findOne
+findOneByProperty
+findOneByCondition
+delete
+deleteByCondition
+deleteByProperty
+findAll
+queryPage
+count
+-->
+
+  <!-- 查询最近睡觉信息 -->
+  <select id="listRestByStudentNo" resultType="com.sunmnet.bigdata.web.model.response.student.StudentRestRES" parameterType="String" >
+    select
+    id as id ,
+    student_no as studentNo ,
+    sleep_time as sleepTime ,
+    getup_time as getupTime
+    from student_rest
+    where student_no = #{studentNo}
+    order by sleep_time desc
+    LIMIT 0,7
+  </select>
+
+
+  <!--查询学生各时间段睡觉次数  -->
+  <select id="sleepTime" resultType="java.util.Map" parameterType="String">
+    SELECT
+      COUNT(*) AS total,
+      CASE
+      WHEN t.hours >= 12
+      THEN 'oneStage'
+      WHEN t.hours >= 8
+      THEN 'twoStage'
+      WHEN t.hours >= 6
+      THEN 'threeStage'
+      ELSE 'fourStage'
+      END AS stage
+    FROM
+      (SELECT
+        (
+        UNIX_TIMESTAMP(getup_time) - UNIX_TIMESTAMP(sleep_time)
+        ) / 3600 AS hours
+      FROM
+        student_rest
+      WHERE student_no =  #{studentNo}) t
+  </select>
+
+  <!-- 查询全校平均睡觉时间 -->
+  <select id="avgSleepTimeOfSchool" resultType="java.math.BigDecimal">
+    SELECT
+      SUM((UNIX_TIMESTAMP(getup_time) - UNIX_TIMESTAMP(sleep_time))/3600)/COUNT(*) as hours
+    FROM student_rest
+  </select>
+
+  <!-- 查询学生平均睡眠时间 -->
+  <select id="avgSleepTimeOfStudent" resultType="java.math.BigDecimal" parameterType="String">
+    SELECT
+      SUM((UNIX_TIMESTAMP(getup_time) - UNIX_TIMESTAMP(sleep_time))/3600)/COUNT(*) as hours
+    from student_rest
+    WHERE student_no =  #{studentNo}
+  </select>
+
+  <!--查询睡眠规律度指数 -->
+  <select id="sleepRegularity" resultType="java.math.BigDecimal" parameterType="String">
+    SELECT
+      (1 - ((STD(s.sleep_time)+STD(s.getup_time))/30000)) * 100
+    FROM
+      ( SELECT CASE WHEN 06 >= DATE_FORMAT(r.sleep_time,'%H')
+      THEN (DATE_FORMAT(r.sleep_time,'%H%i%s') + 240000)
+      ELSE DATE_FORMAT(r.sleep_time,'%H%i%s') END AS sleep_time,
+      DATE_FORMAT(r.getup_time,'%H%i%s') AS getup_time
+    FROM student_rest r
+    WHERE r.student_no =  #{studentNo} ) s
+  </select>
+
+  <!--查询外出指数 -->
+  <select id="getWeekOutIndex" resultType="String" parameterType="String">
+    SELECT week_out_index
+    from student_consumption_index
+    where student_no = #{studentNo}
+  </select>
+
+  <!-- 查询早睡次数 -->
+  <select id="earlySleepTimes" resultType="Integer" parameterType="String">
+    SELECT count(*)
+    from student_rest
+    where student_no =  #{studentNo}
+    and TO_DAYS(getup_time) - TO_DAYS(sleep_time) = 1
+  </select>
+
+  <!-- 查询晚睡次数 -->
+  <select id="lateSleepTimes" resultType="Integer" parameterType="String">
+    SELECT count(*)
+    from student_rest
+    where student_no =  #{studentNo}
+    and TO_DAYS(getup_time) = TO_DAYS(sleep_time)
+  </select>
+
+  <!-- 查询早起次数 -->
+  <select id="earlyGetupTimes" resultType="Integer" parameterType="String">
+    <![CDATA[
+   SELECT count(*)
+     from student_rest
+    where student_no =  #{studentNo}
+      and substring(getup_time, 12) <= '07:00:00'
+   ]]>
+  </select>
+
+  <!-- 查询晚起次数 -->
+  <select id="lateGetupTimes" resultType="Integer" parameterType="String">
+    <![CDATA[
+     SELECT count(*)
+     from student_rest
+    where student_no =  #{studentNo}
+      and substring(getup_time, 12) > '07:00:00'
+   ]]>
+  </select>
+
+
+  <!-- 根据条件查询睡眠时长人数 -->
+  <select id="sleepTimeOfTeam" resultType="java.util.Map" parameterType="com.sunmnet.bigdata.web.model.request.student.StudentRestREQ">
+    <![CDATA[
+	select sum(case when (h.hours >= 12) then 1 else 0 end) as oneStage,
+	       sum(case when (h.hours < 12 and h.hours >= 10) then 1 else 0 end) as twoStage,
+       	   sum(case when (h.hours < 10 and h.hours >= 8) then 1 else 0 end) as threeStage,
+           sum(case when (h.hours < 8  and h.hours >= 6) then 1 else 0 end) as fourStage,
+           sum(case when (h.hours < 6) then 1 else 0 end) as fiveStage
+    ]]>
+    from(
+    SELECT r.student_no,
+    SUM((UNIX_TIMESTAMP(r.getup_time) - UNIX_TIMESTAMP(r.getup_time))/3600)/count(*) as hours
+    from student_rest r
+    JOIN student_info si ON r.student_no = si.student_no
+    <trim prefix="WHERE" prefixOverrides="AND | OR">
+
+      <if test="academyName != null and academyName != ''" >
+        and si.academy_name = #{academyName}
+      </if>
+      <if test="collegeCode != null and collegeCode != ''" >
+        and si.college_code = #{collegeCode}
+      </if>
+      <if test="majorCode != null and majorCode != ''" >
+        and si.major_code = #{majorCode}
+      </if>
+      <if test="className != null and className != ''" >
+        and si.class_name = #{className}
+      </if>
+      <if test="nation != null and nation != ''" >
+        and si.nation = #{nation}
+      </if>
+      <if test="gender != null and gender != ''" >
+        and si.gender = #{gender}
+      </if>
+
+      <if test="nativePlace != null and nativePlace != ''" >
+        and si.native_place = #{nativePlace}
+      </if>
+      <if test="startTime != null and startTime != ''" >
+        <![CDATA[ and r.getup_time >= #{startTime} ]]>
+      </if>
+      <if test="endTime != null and endTime != ''" >
+        <![CDATA[ and r.getup_time <= #{endTime} ]]>
+      </if>
+    </trim>
+    group by r.student_no) h
+  </select>
+
+
+  <!-- 查询睡觉时间点比率(群体画像) -->
+  <select id="sleepRateOfTeam"  resultType="java.util.Map" parameterType="com.sunmnet.bigdata.web.model.request.student.StudentRestREQ">
+    <![CDATA[
+		select ROUND(sum(case when (substr(r.sleep_time, 12) >= '22:00:00' and substr(r.sleep_time, 12) <= '22:30:00') then 1 else 0 end)/count(*),2) as oneStage,
+               ROUND(sum(case when (substr(r.sleep_time, 12) >  '22:30:00' and substr(r.sleep_time, 12) <= '23:00:00') then 1 else 0 end)/count(*),2) as twoStage,
+               ROUND(sum(case when (substr(r.sleep_time, 12) >  '23:00:00' and substr(r.sleep_time, 12) <= '23:30:00') then 1 else 0 end)/count(*),2) as threeStage,
+               ROUND(sum(case when (substr(r.sleep_time, 12) >  '23:30:00' and substr(r.sleep_time, 12) <= '23:59:59') then 1 else 0 end)/count(*),2) as fourStage,
+               ROUND(sum(case when (substr(r.sleep_time, 12) <  '22:00:00' and substr(r.sleep_time, 12) >= '00:00:00') then 1 else 0 end)/count(*),2) as fiveStage
+	      from student_rest r
+	      JOIN student_info si
+		 WHERE
+			   r.student_no = si.student_no
+	     ]]>
+
+      <if test="academyName != null and academyName != ''" >
+        and si.academy_name = #{academyName}
+      </if>
+      <if test="collegeCode != null and collegeCode != ''" >
+        and si.college_code = #{collegeCode}
+      </if>
+      <if test="majorCode != null and majorCode != ''" >
+        and si.major_code = #{majorCode}
+      </if>
+      <if test="className != null and className != ''" >
+        and si.class_name = #{className}
+      </if>
+      <if test="nation != null and nation != ''" >
+        and si.nation = #{nation}
+      </if>
+      <if test="gender != null and gender != ''" >
+        and si.gender = #{gender}
+      </if>
+
+      <if test="nativePlace != null and nativePlace != ''" >
+        and si.native_place = #{nativePlace}
+      </if>
+      <if test="startTime != null and startTime != ''" >
+        <![CDATA[ and r.sleep_time >= #{startTime} ]]>
+      </if>
+      <if test="endTime != null and endTime != ''" >
+        <![CDATA[ and r.sleep_time <= #{endTime} ]]>
+      </if>
+  </select>
+
+  <!--  查询起床时间点比率(综合画像) -->
+  <select id="getUpRateOfTeam"  resultType="java.util.Map" parameterType="com.sunmnet.bigdata.web.model.request.student.StudentRestREQ">
+    <![CDATA[
+        select ROUND(sum(case when (substr(r.getup_time, 12) >= '06:00:00' and substr(r.getup_time, 12) < '06:30:00') then 1 else 0 end)/count(*),2) as oneStage,
+               ROUND(sum(case when (substr(r.getup_time, 12) >= '06:30:00' and substr(r.getup_time, 12) < '07:00:00') then 1 else 0 end)/count(*),2) as twoStage,
+               ROUND(sum(case when (substr(r.getup_time, 12) >= '07:00:00' and substr(r.getup_time, 12) < '07:30:00') then 1 else 0 end)/count(*),2) as threeStage,
+	           ROUND(sum(case when (substr(r.getup_time, 12) >= '07:30:00' and substr(r.getup_time, 12) < '08:00:00') then 1 else 0 end)/count(*),2) as fourStage,
+	           ROUND(sum(case when (substr(r.getup_time, 12) >= '08:00:00') then 1 else 0 end)/count(*),2) as fiveStage
+	      from student_rest r,
+	           student_info si
+		 WHERE
+			   r.student_no = si.student_no
+	     ]]>
+    <if test="academyName != null and academyName != ''" >
+      and si.academy_name = #{academyName}
+    </if>
+    <if test="collegeCode != null and collegeCode != ''" >
+      and si.college_code = #{collegeCode}
+    </if>
+    <if test="majorCode != null and majorCode != ''" >
+      and si.major_code = #{majorCode}
+    </if>
+    <if test="className != null and className != ''" >
+      and si.class_name = #{className}
+    </if>
+    <if test="nation != null and nation != ''" >
+      and si.nation = #{nation}
+    </if>
+    <if test="gender != null and gender != ''" >
+      and si.gender = #{gender}
+    </if>
+    <if test="nativePlace != null and nativePlace != ''" >
+      and si.native_place = #{nativePlace}
+    </if>
+    <if test="startTime != null and startTime != ''" >
+      <![CDATA[ and r.getup_time >= #{startTime} ]]>
+    </if>
+    <if test="endTime != null and endTime != ''" >
+      <![CDATA[ and r.getup_time <= #{endTime} ]]>
+    </if>
+  </select>
+
+  <!-- 根据条件查询平均睡眠时长 -->
+  <select id="avgSleeptimeByCondition" resultType="java.math.BigDecimal"  parameterType="com.sunmnet.bigdata.web.model.request.student.StudentInfoREQ">
+    SELECT SUM((UNIX_TIMESTAMP(sr.getup_time) - UNIX_TIMESTAMP(sr.sleep_time))/3600)/COUNT(*) as hours
+    from student_rest sr,
+    student_info si
+    WHERE
+    sr.student_no = si.student_no
+    <if test="academyName != null and academyName != ''" >
+      and si.academy_name = #{academyName}
+    </if>
+    <if test="collegeCode != null and collegeCode != ''" >
+      and si.college_code = #{collegeCode}
+    </if>
+    <if test="majorCode != null and majorCode != ''" >
+      and si.major_code = #{majorCode}
+    </if>
+    <if test="className != null and className != ''" >
+      and si.class_name = #{className}
+    </if>
+    <if test="nation != null and nation != ''" >
+      and si.nation = #{nation}
+    </if>
+    <if test="gender != null and gender != ''" >
+      and si.gender = #{gender}
+    </if>
+    <if test="nativePlace != null and nativePlace != ''" >
+      and si.native_place = #{nativePlace}
+    </if>
+    <if test="startDate != null and startDate != ''" >
+      <![CDATA[ and sr.getup_time >= #{startDate} ]]>
+    </if>
+    <if test="endDate != null and endDate != ''" >
+      <![CDATA[ and sr.getup_time <= #{endDate} ]]>
+    </if>
+  </select>
+</mapper>
+

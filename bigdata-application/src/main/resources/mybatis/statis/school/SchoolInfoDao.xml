@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+<mapper namespace="com.sunmnet.bigdata.web.dao.school.ISchoolInfoDAO">
+<!--
+save
+update
+findOne
+findOneByProperty
+findOneByCondition
+delete
+deleteByCondition
+deleteByProperty
+findAll
+queryPage
+count
+-->
+  <sql id="Base_Column_List">
+    id as id ,
+    college_name as collegeName ,
+    college_code as collegeCode ,
+    college_priority as collegePriority ,
+    major_name as majorName ,
+    major_code as majorCode ,
+    major_priority as majorPriority ,
+    class_name as className ,
+    class_priority as classPriority
+  </sql>
+
+  <select id="listAllCollege" resultType="SchoolInfo">
+    SELECT DISTINCT
+      college_name as collegeName ,
+      college_code as collegeCode ,
+      college_priority as collegePriority
+    FROM school_info
+    ORDER BY college_priority
+  </select>
+
+  <select id="listMajorByCollege" resultType="SchoolInfo" parameterType="java.lang.String">
+    SELECT DISTINCT
+      major_name as majorName ,
+      major_code as majorCode
+    FROM school_info
+    WHERE college_code = #{collegeCode}
+    ORDER BY major_priority
+  </select>
+
+  <select id="listClassByMajor" resultType="SchoolInfo" parameterType="java.lang.String">
+    SELECT DISTINCT
+      class_name as className
+    FROM school_info
+    WHERE major_code = #{majorCode}
+
+  </select>
+
+  <select id="listAllMajor" resultType="SchoolInfo">
+    SELECT DISTINCT
+      major_name as majorName ,
+      major_code as majorCode
+    FROM school_info
+    ORDER BY major_priority
+  </select>
+
+</mapper>
+

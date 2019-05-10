@@ -1,0 +1,410 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.sunmnet.bigdata.web.dao.student.INearlyMonthNetStatisDAO">
+
+	<select id="getNearly7WeekNetTimeStatis" resultType="java.util.HashMap" parameterType="String">
+		select
+		week_1_count,weekend_1_count,week_2_count,weekend_2_count,week_3_count,weekend_3_count
+		,week_4_count,weekend_4_count,week_5_count,weekend_5_count,week_6_count,weekend_6_count,
+		week_7_count,weekend_7_count from statis_student_surf_internet_month where student_no
+		= #{studentNo}
+	</select>
+	<select id="getMonthAverageNetTime" resultType="int" parameterType="String">
+		select avg_surf_net_time
+		 from statis_student_surf_internet_month where student_no
+		= #{studentNo}
+	</select>
+	<select id="getNetHealthRate" resultType="java.lang.Double" parameterType="String">
+		select netHealthRate
+		 from statis_student_surf_internet_month where student_no
+		= #{studentNo}
+	</select>
+	<select id="getNearlyMonthNetTimeAverage" resultType="java.lang.Double" parameterType="com.sunmnet.bigdata.web.model.request.student.WholePortraitREQ">
+		select avg(avg_surf_net_time)
+		from statis_student_surf_internet_month
+		where 1=1
+		<if test="collegeCode != null">
+			and college_code=#{collegeCode}
+		</if>
+		<if test="majorCode != null">
+			and major_code=#{majorCode}
+		</if>
+		<if test="className != null">
+			and class_name=#{className}
+		</if>
+		<if test="nation != null">
+			and nation=#{nation}
+		</if>
+		<if test="gender != null">
+			and gender=#{gender}
+		</if>
+		<if test="nativePlace != null">
+			and place=#{nativePlace}
+		</if>
+		<if test="academyName != null">
+			and academy_name=#{academyName}
+		</if>
+	</select>
+	<select id="getNearlyMonthNetTimeStatis" resultType="java.util.HashMap"
+		parameterType="map">
+		select
+		(select count(*) from statis_student_surf_internet_month where
+		avg_surf_net_time between 0
+		and 2
+		<if test="collegeCode != null">
+			and college_code=#{collegeCode}
+		</if>
+		<if test="majorCode != null">
+			and major_code=#{majorCode}
+		</if>
+		<if test="className != null">
+			and class_name=#{className}
+		</if>
+		<if test="nation != null">
+			and nation=#{nation}
+		</if>
+		<if test="gender != null">
+			and gender=#{gender}
+		</if>
+		<if test="studentPlace != null">
+			and place=#{studentPlace}
+		</if>
+		<if test="academyName != null">
+			and academy_name=#{academyName}
+		</if>
+		) as netTime_2,
+		(select count(*) from statis_student_surf_internet_month where
+		avg_surf_net_time between 2
+		and 4
+		<if test="collegeCode != null">
+			and college_code=#{collegeCode}
+		</if>
+		<if test="majorCode != null">
+			and major_code=#{majorCode}
+		</if>
+		<if test="className != null">
+			and class_name=#{className}
+		</if>
+		<if test="nation != null">
+			and nation=#{nation}
+		</if>
+		<if test="gender != null">
+			and gender=#{gender}
+		</if>
+		<if test="studentPlace != null">
+			and place=#{studentPlace}
+		</if>
+		<if test="academyName != null">
+			and academy_name=#{academyName}
+		</if>
+		) as netTime_4,
+		(select count(*) from statis_student_surf_internet_month where
+		avg_surf_net_time between 4
+		and 6
+		<if test="collegeCode != null">
+			and college_code=#{collegeCode}
+		</if>
+		<if test="majorCode != null">
+			and major_code=#{majorCode}
+		</if>
+		<if test="className != null">
+			and class_name=#{className}
+		</if>
+		<if test="nation != null">
+			and nation=#{nation}
+		</if>
+		<if test="gender != null">
+			and gender=#{gender}
+		</if>
+		<if test="studentPlace != null">
+			and place=#{studentPlace}
+		</if>
+		<if test="academyName != null">
+			and academy_name=#{academyName}
+		</if>
+		) as netTime_6,
+		(select count(*) from statis_student_surf_internet_month where
+		avg_surf_net_time between 6
+		and 8
+		<if test="collegeCode != null">
+			and college_code=#{collegeCode}
+		</if>
+		<if test="majorCode != null">
+			and major_code=#{majorCode}
+		</if>
+		<if test="className != null">
+			and class_name=#{className}
+		</if>
+		<if test="nation != null">
+			and nation=#{nation}
+		</if>
+		<if test="gender != null">
+			and gender=#{gender}
+		</if>
+		<if test="studentPlace != null">
+			and place=#{studentPlace}
+		</if>
+		<if test="academyName != null">
+			and academy_name=#{academyName}
+		</if>
+		) as netTime_8,
+		(select count(*) from statis_student_surf_internet_month where
+		avg_surf_net_time between 8
+		and 10
+		<if test="collegeCode != null">
+			and college_code=#{collegeCode}
+		</if>
+		<if test="majorCode != null">
+			and major_code=#{majorCode}
+		</if>
+		<if test="className != null">
+			and class_name=#{className}
+		</if>
+		<if test="nation != null">
+			and nation=#{nation}
+		</if>
+		<if test="gender != null">
+			and gender=#{gender}
+		</if>
+		<if test="studentPlace != null">
+			and place=#{studentPlace}
+		</if>
+		<if test="academyName != null">
+			and academy_name=#{academyName}
+		</if>
+		) as netTime_10,
+		(select count(*) from statis_student_surf_internet_month where
+		avg_surf_net_time > 10
+		<if test="collegeCode != null">
+			and college_code=#{collegeCode}
+		</if>
+		<if test="majorCode != null">
+			and major_code=#{majorCode}
+		</if>
+		<if test="className != null">
+			and class_name=#{className}
+		</if>
+		<if test="nation != null">
+			and nation=#{nation}
+		</if>
+		<if test="gender != null">
+			and gender=#{gender}
+		</if>
+		<if test="studentPlace != null">
+			and place=#{studentPlace}
+		</if>
+		<if test="academyName != null">
+			and academy_name=#{academyName}
+		</if>
+		) as
+		netTime_other
+		from
+		dual
+	</select>
+	<select id="getNearlyMonthNetSlotStatis" resultType="java.util.HashMap"
+		parameterType="map">
+		select
+		(select count(*) from statis_student_surf_internet_month where
+		avg_surf_net_time = 1
+		<if test="collegeCode != null">
+			and college_code=#{collegeCode}
+		</if>
+		<if test="majorCode != null">
+			and major_code=#{majorCode}
+		</if>
+		<if test="className != null">
+			and class_name=#{className}
+		</if>
+		<if test="nation != null">
+			and nation=#{nation}
+		</if>
+		<if test="gender != null">
+			and gender=#{gender}
+		</if>
+		<if test="studentPlace != null">
+			and place=#{studentPlace}
+		</if>
+		<if test="academyName != null">
+			and academy_name=#{academyName}
+		</if>
+		) as
+		timeSlot_1,
+		(select count(*) from statis_student_surf_internet_month where
+		avg_surf_net_time = 2
+		<if test="collegeCode != null">
+			and college_code=#{collegeCode}
+		</if>
+		<if test="majorCode != null">
+			and major_code=#{majorCode}
+		</if>
+		<if test="className != null">
+			and class_name=#{className}
+		</if>
+		<if test="nation != null">
+			and nation=#{nation}
+		</if>
+		<if test="gender != null">
+			and gender=#{gender}
+		</if>
+		<if test="studentPlace != null">
+			and place=#{studentPlace}
+		</if>
+		<if test="academyName != null">
+			and academy_name=#{academyName}
+		</if>
+		) as
+		timeSlot_2,
+		(select count(*) from statis_student_surf_internet_month where
+		avg_surf_net_time = 3
+		<if test="collegeCode != null">
+			and college_code=#{collegeCode}
+		</if>
+		<if test="majorCode != null">
+			and major_code=#{majorCode}
+		</if>
+		<if test="className != null">
+			and class_name=#{className}
+		</if>
+		<if test="nation != null">
+			and nation=#{nation}
+		</if>
+		<if test="gender != null">
+			and gender=#{gender}
+		</if>
+		<if test="studentPlace != null">
+			and place=#{studentPlace}
+		</if>
+		<if test="academyName != null">
+			and academy_name=#{academyName}
+		</if>
+		) as
+		timeSlot_3,
+		(select count(*) from statis_student_surf_internet_month where
+		avg_surf_net_time = 4
+		<if test="collegeCode != null">
+			and college_code=#{collegeCode}
+		</if>
+		<if test="majorCode != null">
+			and major_code=#{majorCode}
+		</if>
+		<if test="className != null">
+			and class_name=#{className}
+		</if>
+		<if test="nation != null">
+			and nation=#{nation}
+		</if>
+		<if test="gender != null">
+			and gender=#{gender}
+		</if>
+		<if test="studentPlace != null">
+			and place=#{studentPlace}
+		</if>
+		<if test="academyName != null">
+			and academy_name=#{academyName}
+		</if>
+		) as
+		timeSlot_4,
+		(select count(*) from statis_student_surf_internet_month where
+		avg_surf_net_time = 5
+		<if test="collegeCode != null">
+			and college_code=#{collegeCode}
+		</if>
+		<if test="majorCode != null">
+			and major_code=#{majorCode}
+		</if>
+		<if test="className != null">
+			and class_name=#{className}
+		</if>
+		<if test="nation != null">
+			and nation=#{nation}
+		</if>
+		<if test="gender != null">
+			and gender=#{gender}
+		</if>
+		<if test="studentPlace != null">
+			and place=#{studentPlace}
+		</if>
+		<if test="academyName != null">
+			and academy_name=#{academyName}
+		</if>
+		) as
+		timeSlot_5,
+		(select count(*) from statis_student_surf_internet_month where
+		avg_surf_net_time = 6
+		<if test="collegeCode != null">
+			and college_code=#{collegeCode}
+		</if>
+		<if test="majorCode != null">
+			and major_code=#{majorCode}
+		</if>
+		<if test="className != null">
+			and class_name=#{className}
+		</if>
+		<if test="nation != null">
+			and nation=#{nation}
+		</if>
+		<if test="gender != null">
+			and gender=#{gender}
+		</if>
+		<if test="studentPlace != null">
+			and place=#{studentPlace}
+		</if>
+		<if test="academy_name != null">
+			and academy_name=#{academyName}
+		</if>
+		) as
+		timeSlot_6,
+		(select count(*) from statis_student_surf_internet_month where
+		avg_surf_net_time = 7
+		<if test="collegeCode != null">
+			and college_code=#{collegeCode}
+		</if>
+		<if test="majorCode != null">
+			and major_code=#{majorCode}
+		</if>
+		<if test="className != null">
+			and class_name=#{className}
+		</if>
+		<if test="nation != null">
+			and nation=#{nation}
+		</if>
+		<if test="gender != null">
+			and gender=#{gender}
+		</if>
+		<if test="studentPlace != null">
+			and place=#{studentPlace}
+		</if>
+		<if test="academyName != null">
+			and academy_name=#{academyName}
+		</if>
+		) as
+		timeSlot_7,
+		(select count(*) from statis_student_surf_internet_month where
+		avg_surf_net_time = 8
+		<if test="collegeCode != null">
+			and college_code=#{collegeCode}
+		</if>
+		<if test="majorCode != null">
+			and major_code=#{majorCode}
+		</if>
+		<if test="className != null">
+			and class_name=#{className}
+		</if>
+		<if test="nation != null">
+			and nation=#{nation}
+		</if>
+		<if test="gender != null">
+			and gender=#{gender}
+		</if>
+		<if test="studentPlace != null">
+			and place=#{studentPlace}
+		</if>
+		<if test="academyName != null">
+			and academy_name=#{academyName}
+		</if>
+		) as
+		timeSlot_8
+		from
+		dual
+	</select>
+</mapper>
