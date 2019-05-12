@@ -50,7 +50,7 @@ import java.util.stream.Stream;
 public class WebMvcConfig extends WebMvcConfigurerAdapter {
 
     @Resource
-    private ApplicationContext ctx;
+    private ApplicationContext ctx11;
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
